@@ -40,6 +40,12 @@ fieldset.conditional.is-visible {
   display: flex;
 }
 
+section.conditional.modality-panel.is-visible {
+  display: grid;
+  grid-template-columns: 1fr;
+  align-items: start;
+}
+
 .check-grid {
   display: flex;
   flex-wrap: wrap;
