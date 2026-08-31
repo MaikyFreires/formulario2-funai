@@ -1,6 +1,10 @@
 # Formulario FUNAI
 
-Aplicacao estatica para preenchimento, recuperacao e envio de formularios de resumo de processos de reivindicacao.
+Aplicacao estatica para preenchimento, recuperacao e envio de formularios FUNAI via Power Automate/SharePoint.
+
+## Produto 2
+
+O Formulario 2 / Produto 2 nao e uma copia funcional do Formulario 1. Ele reaproveita componentes tecnicos, estilos, validacoes e padroes de persistencia quando compativeis, mas sua estrutura funcional segue a parte `FORMULARIO PRODUTO 2` do documento de qualificacao de reivindicacao fundiaria indigena.
 
 ## Fluxo
 
@@ -10,24 +14,48 @@ Aplicacao estatica para preenchimento, recuperacao e envio de formularios de res
 - Recuperacao de rascunhos pelo `formularioId`.
 - Visualizacao de enviados com opcao de salvar em PDF.
 
-## Estrutura
+## Estrutura do Formulario 2
+
+- `1. Dados do consultor`: mantido como no formulario existente.
+- `2. Reivindicacao`: ID, nome, etnias, processo e qualificacao, tipo da demanda.
+- `5. Caracterizacao da area reivindicada`: UF/municipio, localizacao, coordenadas geograficas no mesmo modelo do Formulario 1, bioma, faixa de fronteira e sobreposicoes.
+- `6. Situacao da area reivindicada`: posse, vulnerabilidades, comunidades tradicionais, povos isolados, acoes judiciais da comunidade, ocupantes nao indigenas, nivel de tensao e informacoes adicionais.
+- `7. Encaminhamentos e recomendacoes`: atividade atual da reivindicacao e relacao com outras reivindicacoes.
+
+## Campos condicionais
+
+O campo `tipoDemanda` centraliza as regras:
+
+- `Identificacao`: exibe apenas os campos gerais da reivindicacao.
+- `Revisao de limites`: exibe `revisaoLimites`, com TI original, ato de regularizacao, documentos, prazo decadencial, erro grave/insanavel, tipos de erro, observacoes e enquadramento STF.
+- `Reserva Indigena`: exibe `reservaIndigena`, com indicacao de area, imovel passivel de destinacao e informacoes sobre o imovel/destinacao.
+
+Valores de blocos que nao correspondem a modalidade selecionada nao sao serializados no `FormularioJson`.
+
+## SharePoint
+
+O envio continua usando `POWER_AUTOMATE_URL`. Campos existentes reaproveitados incluem consultor, ID, nome da reivindicacao, etnias, processos analisados, UF/municipio, bioma, faixa de fronteira, sobreposicoes, vulnerabilidades, comunidades tradicionais, povos isolados, acoes judiciais da comunidade e informacoes adicionais.
+
+Novos campos do Produto 2 devem ter colunas SharePoint criadas manualmente antes de serem persistidos em colunas dedicadas. Sem o esquema real da lista, o sistema nao inventa `InternalName`; os dados completos seguem preservados no `FormularioJson`.
+
+## Campos removidos do Formulario 2
+
+- Outros nomes da reivindicacao.
+- Secao isolada Localizacao dentro de Reivindicacao.
+- Secao Resumo do processo.
+- Secao Status do processo.
+- Cita aldeias/comunidades.
+- Contexto urbano.
+- Acao de retomada do territorio.
+- Detalhes por criterio de vulnerabilidade.
+- Conflito na area reivindicada.
+- Reintegracao de posse.
+
+## Estrutura do projeto
 
 - `index.html`: ponto de entrada da aplicacao.
 - `html/`: telas carregadas pelo index.
-  - `acesso.html`: tela de login por e-mail.
-  - `dashboard.html`: painel do consultor.
-  - `formulario.html`: formulario em etapas.
 - `css/styles.css`: arquivo principal de estilos, com imports.
-- `css/partials/`: estilos separados por responsabilidade.
-  - `00-base.css`: variaveis, base visual, fundo e rodape.
-  - `10-access-dashboard.css`: acesso, dashboard, listas e confirmacao.
-  - `20-form-layout.css`: cabecalho do formulario, progresso, etapas e grids.
-  - `30-controls.css`: campos, inputs, autocomplete, chips e processos.
-  - `40-tables.css`: tabelas de documentos e coordenadas.
-  - `50-form-sections.css`: secoes especificas do formulario.
-  - `60-components-actions.css`: condicionais, mensagens, erros e botoes.
-  - `70-responsive.css`: responsividade.
-  - `80-print.css`: impressao/PDF.
 - `js/script.js`: regras de interface, validacoes, dashboard, rascunhos e envio.
 - `js/config.example.js`: modelo publico de configuracao.
 - `data/`: arquivos CSV usados nos campos.
@@ -37,12 +65,7 @@ Aplicacao estatica para preenchimento, recuperacao e envio de formularios de res
 
 Copie `js/config.example.js` para `js/config.js` e preencha as URLs dos fluxos do Power Automate no ambiente local. O arquivo real `js/config.js` nao deve ser enviado ao GitHub.
 
-## Publicacao
-
-O projeto pode ser publicado como site estatico, por exemplo no GitHub Pages. Nao ha etapa de build.
-
 ## Observacoes
 
 - Use um servidor local para testar CSVs e carregamento de telas parciais.
-- Depois de mudancas em CSS ou JS, atualize o cache bust em `index.html` e em `APP_VERSION` no `js/script.js`.
 - Nao versione arquivos locais com URLs reais, segredos ou anotacoes internas.

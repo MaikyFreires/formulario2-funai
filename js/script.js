@@ -15,21 +15,15 @@ const AUTOSAVE_DEBOUNCE_MS = 2000;
 const AUTOSAVE_MIN_INTERVAL_MS = 5000;
 const DATE_BR_FIELD_NAMES = new Set([
   "dataRoteiro",
-  "dataDocumento",
-  "dataAcaoJudicial",
-  "dataDecisao",
-  "dataAcaoJudicialDetalhada",
-  "dataReferenciaOcupacao",
-  "dataVulnerabilidadeItem",
-  "dataComunidadeTradicional"
+  "dataDocumentoRegularizacao",
+  "dataPrimeiraMencaoReivindicacao"
 ]);
 const REQUIRED_FORMULARIO_JSON_BLOCKS = [
   "consultor",
   "reivindicacao",
-  "resumoProcesso",
-  "statusProcesso",
   "caracterizacaoArea",
-  "ocupacaoIndigena"
+  "situacaoArea",
+  "encaminhamentos"
 ];
 const TIPOS_ACAO_JUDICIAL = ["Qualificação", "Constituição de GT", "Outros"];
 const COMUNIDADES_TRADICIONAIS = [
@@ -451,30 +445,30 @@ function bindEvents() {
   form.addEventListener("click", handleConflictEthnicityClick);
   form.addEventListener("keydown", handleConflictEthnicityKeydown);
   form.addEventListener("submit", enviarFormulario);
-  addEtniaBtn.addEventListener("click", addSelectedEtnia);
-  etniaInput.addEventListener("keydown", handleEtniaKeydown);
-  etniaChips.addEventListener("click", removeSelectedEtnia);
-  addOutraEtniaBtn.addEventListener("click", addSelectedOutraEtnia);
-  outraEtniaInput.addEventListener("keydown", handleOutraEtniaKeydown);
-  outraEtniaChips.addEventListener("click", removeSelectedOutraEtnia);
-  addEstadoBtn.addEventListener("click", addSelectedEstado);
-  estadoInput.addEventListener("keydown", handleEstadoKeydown);
-  estadoChips.addEventListener("click", removeSelectedEstado);
-  addMunicipioBtn.addEventListener("click", addSelectedMunicipio);
-  municipioInput.addEventListener("keydown", handleMunicipioKeydown);
-  municipioChips.addEventListener("click", removeSelectedMunicipio);
-  addComunidadeTradicionalBtn.addEventListener("click", addSelectedComunidadeTradicional);
-  comunidadeTradicionalInput.addEventListener("keydown", handleComunidadeTradicionalKeydown);
-  comunidadeTradicionalChips.addEventListener("click", removeSelectedComunidadeTradicional);
-  processList.addEventListener("click", handleProcessosAnalisadosClick);
-  addAldeiaBtn.addEventListener("click", () => addAldeiaField());
-  aldeiaInput.addEventListener("keydown", handleAldeiaKeydown);
-  aldeiaChips.addEventListener("click", removeAldeiaField);
-  documentosTableBody.addEventListener("click", handleDocumentoTableClick);
+  addEtniaBtn?.addEventListener("click", addSelectedEtnia);
+  etniaInput?.addEventListener("keydown", handleEtniaKeydown);
+  etniaChips?.addEventListener("click", removeSelectedEtnia);
+  addOutraEtniaBtn?.addEventListener("click", addSelectedOutraEtnia);
+  outraEtniaInput?.addEventListener("keydown", handleOutraEtniaKeydown);
+  outraEtniaChips?.addEventListener("click", removeSelectedOutraEtnia);
+  addEstadoBtn?.addEventListener("click", addSelectedEstado);
+  estadoInput?.addEventListener("keydown", handleEstadoKeydown);
+  estadoChips?.addEventListener("click", removeSelectedEstado);
+  addMunicipioBtn?.addEventListener("click", addSelectedMunicipio);
+  municipioInput?.addEventListener("keydown", handleMunicipioKeydown);
+  municipioChips?.addEventListener("click", removeSelectedMunicipio);
+  addComunidadeTradicionalBtn?.addEventListener("click", addSelectedComunidadeTradicional);
+  comunidadeTradicionalInput?.addEventListener("keydown", handleComunidadeTradicionalKeydown);
+  comunidadeTradicionalChips?.addEventListener("click", removeSelectedComunidadeTradicional);
+  processList?.addEventListener("click", handleProcessosAnalisadosClick);
+  addAldeiaBtn?.addEventListener("click", () => addAldeiaField());
+  aldeiaInput?.addEventListener("keydown", handleAldeiaKeydown);
+  aldeiaChips?.addEventListener("click", removeAldeiaField);
+  documentosTableBody?.addEventListener("click", handleDocumentoTableClick);
   document.addEventListener("click", handleInfoToggleClick);
-  coordenadasTableBody.addEventListener("click", handleCoordenadaTableClick);
-  coordenadasTableBody.addEventListener("input", handleCoordenadaTableInput);
-  mapasTableBody.addEventListener("click", handleMapaTableClick);
+  coordenadasTableBody?.addEventListener("click", handleCoordenadaTableClick);
+  coordenadasTableBody?.addEventListener("input", handleCoordenadaTableInput);
+  mapasTableBody?.addEventListener("click", handleMapaTableClick);
   prevBtn.addEventListener("click", goToPreviousStep);
   nextBtn.addEventListener("click", goToNextStep);
   saveDraftBtn.addEventListener("click", salvarRascunho);
@@ -4962,4 +4956,567 @@ function showAccessMessage(text, type) {
 function clearAccessMessage() {
   accessMessage.textContent = "";
   accessMessage.className = "message";
+}
+
+// Produto 2 overrides: keep shared helpers, replace the copied Produto 1 behavior.
+function updateConditionals({ renderDynamic = true } = {}) {
+  setConditional("dataRoteiroWrap", getValue("temRoteiro") === "Sim");
+  setConditional("numeroSeiQualificacaoWrap", getValue("temRoteiro") === "Sim");
+  setConditional("outraEtniaWrap", selectedEtnias.includes("Outros"));
+  setConditional("coordenadasWrap", getValue("temCoordenadas") === "Sim");
+  setConditional("sobreposicoesWrap", getValue("sobreposicoes") === "Sim");
+  setConditional("indigenasAreaWrap", getValue("indigenasArea") === "Sim");
+  setConditional("comunidadesTradicionaisWrap", getValue("comunidadesTradicionais") === "Sim");
+  setConditional("outrasComunidadesTradicionaisWrap", selectedComunidadesTradicionais.includes("Outros"));
+  setConditional("povosIsoladosWrap", getValue("povosIsolados") === "Sim");
+  setConditional("outrasAcoesJudiciaisComunidadeWrap", getValue("outrasAcoesJudiciaisComunidade") === "Sim");
+  setConditional("tiposOcupantesNaoIndigenasWrap", getValue("ocupantesNaoIndigenas") === "Sim");
+  setConditional("outroOcupanteNaoIndigenaWrap", getValue("ocupantesNaoIndigenas") === "Sim" && getCheckedValues("tiposOcupantesNaoIndigenas").includes("Outros"));
+  setConditional("idsReivindicacoesRelacionadasWrap", getValue("relacaoOutrasReivindicacoes") === "Sim");
+  setConditional("descricaoRelacaoReivindicacoesWrap", getValue("relacaoOutrasReivindicacoes") === "Sim");
+
+  const demandas = getCheckedValues("tipoDemanda");
+  const isRevisao = hasDemand(demandas, "Revisão de limites");
+  const isReserva = hasDemand(demandas, "Reserva Indígena");
+  setConditional("revisaoLimitesWrap", isRevisao);
+  setConditional("reservaIndigenaWrap", isReserva);
+  setConditional("tiposErroPrimeiraDemarcacaoWrap", isRevisao && getValue("erroPrimeiraDemarcacao") === "Sim");
+  setConditional("outroErroPrimeiraDemarcacaoWrap", isRevisao && getValue("erroPrimeiraDemarcacao") === "Sim" && getCheckedValues("tiposErroPrimeiraDemarcacao").includes("Outros"));
+
+  if (renderDynamic) {
+    renderAcoesJudiciaisDetalhadas();
+    renderDetalhesConflitos();
+  }
+  updateVulnerabilityDetails();
+  updateCoordinateFormatDetails();
+}
+
+function validateRequiredFields(isDraftSave = false) {
+  clearValidationErrors();
+  if (isDraftSave) return [];
+
+  updateConditionals();
+  const errors = [];
+  const demandas = getCheckedValues("tipoDemanda");
+  const isRevisao = hasDemand(demandas, "Revisão de limites");
+  const isReserva = hasDemand(demandas, "Reserva Indígena");
+  const requiredRules = [
+    { fieldId: "consultorNome", label: "Nome completo do(a) consultor(a)", isValid: () => hasValue("consultorNome") },
+    { fieldId: "areaEstudo", label: "Área de estudo", isValid: () => hasValue("areaEstudo") },
+    { fieldId: "reivindicacaoId", label: "ID", isValid: () => hasValue("reivindicacaoId") },
+    { fieldId: "nomeReivindicacao", label: "Nome da reivindicação", isValid: () => hasValue("nomeReivindicacao") },
+    { fieldId: "etnias", label: "Etnias", isValid: () => selectedEtnias.length > 0 },
+    { fieldId: "outraEtnia", label: "Outra etnia", isValid: () => !selectedEtnias.includes("Outros") || selectedOutrasEtnias.length > 0 },
+    { fieldId: "tipoDemanda", label: "Tipo da demanda", isValid: () => demandas.length === 1 },
+    { fieldId: "tiposErroPrimeiraDemarcacao", label: "Tipo de erro identificado", isValid: () => !isRevisao || getValue("erroPrimeiraDemarcacao") !== "Sim" || getCheckedValues("tiposErroPrimeiraDemarcacao").length > 0 },
+    { fieldId: "outroErroPrimeiraDemarcacao", label: "Descrição de outros erros", isValid: () => !isRevisao || !getCheckedValues("tiposErroPrimeiraDemarcacao").includes("Outros") || hasValue("outroErroPrimeiraDemarcacao") },
+    { fieldId: "estados", label: "Estado", isValid: () => selectedEstados.length > 0 },
+    { fieldId: "municipios", label: "Município", isValid: () => selectedMunicipios.length > 0 },
+    { fieldId: "localizacaoDemanda", label: "Localização da demanda", isValid: () => hasValue("localizacaoDemanda") },
+    { fieldId: "temCoordenadas", label: "Coordenadas geográficas", isValid: () => hasChecked("temCoordenadas") },
+    { fieldId: "coordenadas", label: "Coordenadas geográficas", isValid: () => getValue("temCoordenadas") !== "Sim" || areCoordenadasValid() },
+    { fieldId: "bioma", label: "Bioma", isValid: () => getCheckedValues("bioma").length > 0 },
+    { fieldId: "faixaFronteira", label: "Faixa de Fronteira", isValid: () => hasChecked("faixaFronteira") },
+    { fieldId: "sobreposicoes", label: "Sobreposições", isValid: () => hasChecked("sobreposicoes") },
+    { fieldId: "tiposSobreposicao", label: "Tipos de sobreposição", isValid: () => getValue("sobreposicoes") !== "Sim" || getCheckedValues("tiposSobreposicao").length > 0 },
+    { fieldId: "detalheOutrasSobreposicoes", label: "Detalhe de outras sobreposições", isValid: () => !getCheckedValues("tiposSobreposicao").includes("Outros") || hasValue("detalheOutrasSobreposicoes") },
+    { fieldId: "indigenasArea", label: "Indígenas estão na área reivindicada", isValid: () => hasChecked("indigenasArea") },
+    { fieldId: "situacaoPosse", label: "Situação de posse", isValid: () => getValue("indigenasArea") !== "Sim" || hasChecked("situacaoPosse") },
+    { fieldId: "vulnerabilidades", label: "Critério de vulnerabilidade", isValid: () => getCheckedValues("vulnerabilidades").length > 0 },
+    { fieldId: "comunidadesTradicionais", label: "Comunidades tradicionais", isValid: () => hasChecked("comunidadesTradicionais") },
+    { fieldId: "descricaoComunidadeTradicional", label: "Outra comunidade tradicional", isValid: () => !selectedComunidadesTradicionais.includes("Outros") || hasValue("descricaoComunidadeTradicional") },
+    { fieldId: "povosIsolados", label: "Povos isolados", isValid: () => hasChecked("povosIsolados") },
+    { fieldId: "detalhesPovosIsolados", label: "Detalhes de povos isolados", isValid: () => getValue("povosIsolados") !== "Sim" || hasValue("detalhesPovosIsolados") },
+    { fieldId: "outroOcupanteNaoIndigena", label: "Descrição de outros ocupantes", isValid: () => !getCheckedValues("tiposOcupantesNaoIndigenas").includes("Outros") || hasValue("outroOcupanteNaoIndigena") },
+    { fieldId: "idsReivindicacoesRelacionadas", label: "IDs das reivindicações relacionadas", isValid: () => getValue("relacaoOutrasReivindicacoes") !== "Sim" || hasValue("idsReivindicacoesRelacionadas") },
+    { fieldId: "descricaoRelacaoReivindicacoes", label: "Descrição da relação", isValid: () => getValue("relacaoOutrasReivindicacoes") !== "Sim" || hasValue("descricaoRelacaoReivindicacoes") }
+  ];
+
+  requiredRules.forEach((rule) => {
+    if (rule.isValid()) return;
+    const error = showFieldError(rule.fieldId, rule.message || getRequiredFieldMessage(rule.fieldId));
+    errors.push({ fieldId: rule.fieldId, label: rule.label, stepIndex: error.stepIndex, target: error.target });
+  });
+
+  getInvalidDateFields().forEach((field, index) => {
+    const error = showControlError(field, `dateField-${index}`, "Informe uma data válida no formato dd/mm/aaaa.");
+    errors.push({ fieldId: `dateField-${index}`, label: getDateFieldLabel(field), stepIndex: error.stepIndex, target: error.target });
+  });
+
+  return errors;
+}
+
+function isRequiredFieldResolved(fieldId) {
+  return validateRequiredFields(true).length === 0 || Boolean(fieldId);
+}
+
+function montarFormularioJson(statusFormulario = "Rascunho", now = new Date().toISOString()) {
+  const tipoDemanda = asText(getValue("tipoDemanda"));
+  const isRevisao = hasDemand([tipoDemanda], "Revisão de limites");
+  const isReserva = hasDemand([tipoDemanda], "Reserva Indígena");
+  const estados = asList(getSelectedEstados());
+  const municipios = asList(getSelectedMunicipios());
+  const coordenadasDetalhadas = getValue("temCoordenadas") === "Sim" ? asList(getCoordenadasDetalhadas()) : [];
+  const coordenadas = getValue("temCoordenadas") === "Sim" ? asList(getCoordenadasGeograficas()) : [];
+  const primeiraCoordenada = coordenadasDetalhadas[0] || {};
+  const tiposSobreposicao = getValue("sobreposicoes") === "Sim" ? asList(getCheckedValues("tiposSobreposicao")) : [];
+  const tiposErro = isRevisao && getValue("erroPrimeiraDemarcacao") === "Sim" ? asList(getCheckedValues("tiposErroPrimeiraDemarcacao")) : [];
+  const tiposOcupantes = getValue("ocupantesNaoIndigenas") === "Sim" ? asList(getCheckedValues("tiposOcupantesNaoIndigenas")) : [];
+  const temRelacao = getValue("relacaoOutrasReivindicacoes") === "Sim";
+
+  return {
+    formularioId: asText(getCurrentFormularioId()),
+    tokenSecreto: asText(SECRET_TOKEN),
+    statusFormulario: asText(statusFormulario),
+    atualizadoEm: asText(now),
+    enviadoEm: statusFormulario === "Enviado" ? asText(now) : "",
+    origem: "github-pages-funai",
+    produto: "Produto 2",
+    etapaAtual: currentStep,
+    consultor: {
+      nome: asText(getValue("consultorNome")),
+      email: asText(getAuthorizedEmail()),
+      areaEstudo: asText(getValue("areaEstudo"))
+    },
+    reivindicacao: {
+      id: asText(getValue("reivindicacaoId")),
+      nome: asText(getValue("nomeReivindicacao")),
+      etnias: asList(getSelectedEtnias()),
+      outraEtnia: asText(getSelectedOutrasEtnias().join(", ")),
+      outrasEtnias: asList(getSelectedOutrasEtnias()),
+      processosAnalisados: asList(getProcessosAnalisados()),
+      temRoteiro: asText(getValue("temRoteiro")),
+      dataRoteiro: getValue("temRoteiro") === "Sim" ? prepararDataParaPayload(getValue("dataRoteiro")) : "",
+      numeroSeiQualificacao: getValue("temRoteiro") === "Sim" ? asText(getValue("numeroSeiQualificacao")) : "",
+      tipoDemanda,
+      revisaoLimites: isRevisao ? {
+        nomeTiOriginal: asText(getValue("nomeTiOriginal")),
+        ultimoAtoRegularizacao: asText(getValue("ultimoAtoRegularizacao")),
+        nomeDocumentoRegularizacao: asText(getValue("nomeDocumentoRegularizacao")),
+        dataDocumentoRegularizacao: prepararDataParaPayload(getValue("dataDocumentoRegularizacao")),
+        dataPrimeiraMencaoReivindicacao: prepararDataParaPayload(getValue("dataPrimeiraMencaoReivindicacao")),
+        areaPrazoDecadencial: asText(getValue("areaPrazoDecadencial")),
+        erroPrimeiraDemarcacao: asText(getValue("erroPrimeiraDemarcacao")),
+        tiposErroPrimeiraDemarcacao: tiposErro,
+        outroErroPrimeiraDemarcacao: tiposErro.includes("Outros") ? asText(getValue("outroErroPrimeiraDemarcacao")) : "",
+        observacoesErrosDocumentos: asText(getValue("observacoesErrosDocumentos")),
+        enquadraRequisitosStf: asText(getValue("enquadraRequisitosStf"))
+      } : {},
+      reservaIndigena: isReserva ? {
+        comunidadeIndicouArea: asText(getValue("comunidadeIndicouArea")),
+        imovelDestinacaoComunidade: asText(getValue("imovelDestinacaoComunidade")),
+        informacoesImovelDestinacao: asText(getValue("informacoesImovelDestinacao"))
+      } : {}
+    },
+    caracterizacaoArea: {
+      estado: asText(estados.join(", ")),
+      estados,
+      municipio: asText(municipios.join(", ")),
+      municipios,
+      localizacaoDemanda: asText(getValue("localizacaoDemanda")),
+      temCoordenadas: asText(getValue("temCoordenadas")),
+      coordenadas,
+      coordenadasDetalhadas,
+      latitude: asText(primeiraCoordenada.latitude),
+      tipoCoordenada: asText(primeiraCoordenada.tipoCoordenada),
+      outroFormatoCoordenada: asText(primeiraCoordenada.outroFormatoCoordenada),
+      latitudeDirecao: asText(primeiraCoordenada.latitudeDirecao),
+      longitude: asText(primeiraCoordenada.longitude),
+      longitudeDirecao: asText(primeiraCoordenada.longitudeDirecao),
+      coordenadaSedeMunicipio: asText(primeiraCoordenada.coordenadaSedeMunicipio),
+      comentarioCoordenada: asText(primeiraCoordenada.comentarioCoordenada),
+      bioma: asList(getCheckedValues("bioma")),
+      faixaFronteira: asText(getValue("faixaFronteira")),
+      sobreposicoes: asText(getValue("sobreposicoes")),
+      tiposSobreposicao,
+      detalheUcFederal: tiposSobreposicao.includes("Unidade de Conservação Federal") ? asText(getValue("detalheUcFederal")) : "",
+      detalheUcEstadual: tiposSobreposicao.includes("Unidade de Conservação Estadual") ? asText(getValue("detalheUcEstadual")) : "",
+      detalheUcMunicipal: tiposSobreposicao.includes("Unidade de Conservação Municipal") ? asText(getValue("detalheUcMunicipal")) : "",
+      detalheGlebaFederal: tiposSobreposicao.includes("Gleba Pública Federal") ? asText(getValue("detalheGlebaFederal")) : "",
+      detalheGlebaEstadual: tiposSobreposicao.includes("Gleba Pública Estadual") ? asText(getValue("detalheGlebaEstadual")) : "",
+      detalheTerritorioQuilombola: tiposSobreposicao.includes("Território Quilombola") ? asText(getValue("detalheTerritorioQuilombola")) : "",
+      detalheProjetoAssentamento: tiposSobreposicao.includes("Projeto de Assentamento (PA)") ? asText(getValue("detalheProjetoAssentamento")) : "",
+      detalheProjetoAssentamentoAgroextrativista: tiposSobreposicao.includes("Projeto de Assentamento Agroextrativista (PAE)") ? asText(getValue("detalheProjetoAssentamentoAgroextrativista")) : "",
+      detalheProjetoDesenvolvimentoSustentavel: tiposSobreposicao.includes("Projeto de Desenvolvimento Sustentável (PDS)") ? asText(getValue("detalheProjetoDesenvolvimentoSustentavel")) : "",
+      detalheProjetoAssentamentoFlorestal: tiposSobreposicao.includes("Projeto de Assentamento Florestal (PAF)") ? asText(getValue("detalheProjetoAssentamentoFlorestal")) : "",
+      detalheOutrasSobreposicoes: tiposSobreposicao.includes("Outros") ? asText(getValue("detalheOutrasSobreposicoes")) : ""
+    },
+    situacaoArea: {
+      indigenasArea: asText(getValue("indigenasArea")),
+      situacaoPosse: getValue("indigenasArea") === "Sim" ? asText(getValue("situacaoPosse")) : "",
+      vulnerabilidades: asList(getCheckedValues("vulnerabilidades")),
+      comunidadesTradicionais: asText(getValue("comunidadesTradicionais")),
+      tiposComunidadeTradicional: getValue("comunidadesTradicionais") === "Sim" ? asList(getSelectedComunidadesTradicionais()) : [],
+      descricaoComunidadeTradicional: selectedComunidadesTradicionais.includes("Outros") ? asText(getValue("descricaoComunidadeTradicional")) : "",
+      povosIsolados: asText(getValue("povosIsolados")),
+      detalhesPovosIsolados: getValue("povosIsolados") === "Sim" ? asText(getValue("detalhesPovosIsolados")) : "",
+      outrasAcoesJudiciaisComunidade: asText(getValue("outrasAcoesJudiciaisComunidade")),
+      descricaoOutrasAcoesJudiciaisComunidade: getValue("outrasAcoesJudiciaisComunidade") === "Sim" ? asText(getValue("descricaoOutrasAcoesJudiciaisComunidade")) : "",
+      ocupantesNaoIndigenas: asText(getValue("ocupantesNaoIndigenas")),
+      tiposOcupantesNaoIndigenas: tiposOcupantes,
+      outroOcupanteNaoIndigena: tiposOcupantes.includes("Outros") ? asText(getValue("outroOcupanteNaoIndigena")) : "",
+      nivelTensaoLocal: asText(getValue("nivelTensaoLocal")),
+      informacoesAdicionais: asText(getValue("informacoesAdicionais"))
+    },
+    encaminhamentos: {
+      reivindicacaoAtivaAtual: asText(getValue("reivindicacaoAtivaAtual")),
+      relacaoOutrasReivindicacoes: asText(getValue("relacaoOutrasReivindicacoes")),
+      idsReivindicacoesRelacionadas: temRelacao ? parseIdsRelacionados(getValue("idsReivindicacoesRelacionadas")) : [],
+      descricaoRelacaoReivindicacoes: temRelacao ? asText(getValue("descricaoRelacaoReivindicacoes")) : ""
+    }
+  };
+}
+
+function garantirTiposPayload(payload) {
+  const normalizado = {
+    ...payload,
+    formularioJson: normalizarTextoParaPowerAutomate(payload.formularioJson),
+    consultor: garantirObjeto(payload.consultor),
+    reivindicacao: garantirObjeto(payload.reivindicacao),
+    caracterizacaoArea: garantirObjeto(payload.caracterizacaoArea),
+    situacaoArea: garantirObjeto(payload.situacaoArea),
+    encaminhamentos: garantirObjeto(payload.encaminhamentos)
+  };
+
+  normalizado.reivindicacao.etnias = garantirArray(normalizado.reivindicacao.etnias);
+  normalizado.reivindicacao.outrasEtnias = garantirArray(normalizado.reivindicacao.outrasEtnias);
+  normalizado.reivindicacao.processosAnalisados = garantirArray(normalizado.reivindicacao.processosAnalisados);
+  normalizado.reivindicacao.revisaoLimites = garantirObjeto(normalizado.reivindicacao.revisaoLimites);
+  normalizado.reivindicacao.revisaoLimites.tiposErroPrimeiraDemarcacao = garantirArray(normalizado.reivindicacao.revisaoLimites.tiposErroPrimeiraDemarcacao);
+  normalizado.reivindicacao.reservaIndigena = garantirObjeto(normalizado.reivindicacao.reservaIndigena);
+  normalizado.caracterizacaoArea.estados = garantirArray(normalizado.caracterizacaoArea.estados);
+  normalizado.caracterizacaoArea.municipios = garantirArray(normalizado.caracterizacaoArea.municipios);
+  normalizado.caracterizacaoArea.coordenadas = garantirArray(normalizado.caracterizacaoArea.coordenadas);
+  normalizado.caracterizacaoArea.coordenadasDetalhadas = garantirArray(normalizado.caracterizacaoArea.coordenadasDetalhadas);
+  normalizado.caracterizacaoArea.bioma = garantirArray(normalizado.caracterizacaoArea.bioma);
+  normalizado.caracterizacaoArea.tiposSobreposicao = garantirArray(normalizado.caracterizacaoArea.tiposSobreposicao);
+  normalizado.situacaoArea.vulnerabilidades = garantirArray(normalizado.situacaoArea.vulnerabilidades);
+  normalizado.situacaoArea.tiposComunidadeTradicional = garantirArray(normalizado.situacaoArea.tiposComunidadeTradicional);
+  normalizado.situacaoArea.tiposOcupantesNaoIndigenas = garantirArray(normalizado.situacaoArea.tiposOcupantesNaoIndigenas);
+  normalizado.encaminhamentos.idsReivindicacoesRelacionadas = garantirArray(normalizado.encaminhamentos.idsReivindicacoesRelacionadas);
+
+  normalizado.ocupacaoIndigena = normalizado.situacaoArea;
+  normalizado.resumoProcesso = {};
+  normalizado.statusProcesso = {};
+
+  return normalizado;
+}
+
+function normalizarPayloadParaPowerAutomate(payload) {
+  const normalizado = garantirTiposPayload(payload);
+  normalizado.formularioJson = JSON.stringify({
+    ...converterJsonSerializadoEmObjeto(normalizado.formularioJson),
+    consultor: normalizado.consultor,
+    reivindicacao: normalizado.reivindicacao,
+    caracterizacaoArea: normalizado.caracterizacaoArea,
+    situacaoArea: normalizado.situacaoArea,
+    encaminhamentos: normalizado.encaminhamentos,
+    resumoProcesso: undefined,
+    statusProcesso: undefined,
+    ocupacaoIndigena: undefined
+  }, (_key, value) => value === undefined ? undefined : value);
+  return normalizado;
+}
+
+function prepararPayloadPowerAutomate(payload) {
+  const payloadNormalizado = converterJsonSerializadoEmObjeto({
+    ...payload,
+    formularioJson: converterJsonSerializadoEmObjeto(payload.formularioJson),
+    dados: converterJsonSerializadoEmObjeto(payload.dados),
+    payload: converterJsonSerializadoEmObjeto(payload.payload),
+    consultor: converterJsonSerializadoEmObjeto(payload.consultor),
+    reivindicacao: converterJsonSerializadoEmObjeto(payload.reivindicacao),
+    caracterizacaoArea: converterJsonSerializadoEmObjeto(payload.caracterizacaoArea),
+    situacaoArea: converterJsonSerializadoEmObjeto(payload.situacaoArea),
+    encaminhamentos: converterJsonSerializadoEmObjeto(payload.encaminhamentos)
+  });
+
+  return {
+    ...payloadNormalizado,
+    formularioJson: serializarFormularioJsonParaPowerAutomate(payloadNormalizado.formularioJson)
+  };
+}
+
+function flattenDraft(draft) {
+  const reivindicacao = draft.reivindicacao || {};
+  const revisao = reivindicacao.revisaoLimites || {};
+  const reserva = reivindicacao.reservaIndigena || {};
+  const caracterizacao = draft.caracterizacaoArea || {};
+  const situacao = draft.situacaoArea || draft.ocupacaoIndigena || {};
+  const encaminhamentos = draft.encaminhamentos || {};
+  return {
+    consultorEmail: pickField(draft, directValue(() => draft.consultor?.email), "ConsultorEmail", "consultorEmail"),
+    consultorNome: pickField(draft, directValue(() => draft.consultor?.nome), "ConsultorNome", "Title", "consultorNome"),
+    areaEstudo: pickField(draft, directValue(() => draft.consultor?.areaEstudo), "AreaEstudo", "field_1", "areaEstudo"),
+    reivindicacaoId: pickField(draft, directValue(() => reivindicacao.id), "ReivindicacaoId", "field_2", "reivindicacaoId"),
+    nomeReivindicacao: pickField(draft, directValue(() => reivindicacao.nome), "NomeReivindicacao", "field_3", "nomeReivindicacao"),
+    etnias: asListOrSplit(reivindicacao.etnias || draft.Etnias || draft.etnias),
+    outraEtnia: reivindicacao.outraEtnia,
+    outrasEtnias: asListOrSplit(reivindicacao.outrasEtnias || reivindicacao.outraEtnia),
+    processosAnalisados: normalizarProcessosAnalisados(reivindicacao.processosAnalisados || draft.ProcessosAnalisados || draft.processosAnalisados),
+    temRoteiro: reivindicacao.temRoteiro,
+    dataRoteiro: reivindicacao.dataRoteiro,
+    numeroSeiQualificacao: reivindicacao.numeroSeiQualificacao,
+    tipoDemanda: asListOrSplit(reivindicacao.tipoDemanda)[0] || asText(reivindicacao.tipoDemanda),
+    nomeTiOriginal: revisao.nomeTiOriginal,
+    ultimoAtoRegularizacao: revisao.ultimoAtoRegularizacao,
+    nomeDocumentoRegularizacao: revisao.nomeDocumentoRegularizacao,
+    dataDocumentoRegularizacao: revisao.dataDocumentoRegularizacao,
+    dataPrimeiraMencaoReivindicacao: revisao.dataPrimeiraMencaoReivindicacao,
+    areaPrazoDecadencial: revisao.areaPrazoDecadencial,
+    erroPrimeiraDemarcacao: revisao.erroPrimeiraDemarcacao,
+    tiposErroPrimeiraDemarcacao: revisao.tiposErroPrimeiraDemarcacao,
+    outroErroPrimeiraDemarcacao: revisao.outroErroPrimeiraDemarcacao,
+    observacoesErrosDocumentos: revisao.observacoesErrosDocumentos,
+    enquadraRequisitosStf: revisao.enquadraRequisitosStf,
+    comunidadeIndicouArea: reserva.comunidadeIndicouArea,
+    imovelDestinacaoComunidade: reserva.imovelDestinacaoComunidade,
+    informacoesImovelDestinacao: reserva.informacoesImovelDestinacao,
+    estados: asListOrSplit(caracterizacao.estados || caracterizacao.estado || draft.Estados || draft.estados),
+    municipios: asListOrSplit(caracterizacao.municipios || caracterizacao.municipio || draft.Municipios || draft.municipios),
+    localizacaoDemanda: caracterizacao.localizacaoDemanda,
+    temCoordenadas: caracterizacao.temCoordenadas,
+    coordenadas: normalizeCoordenadas(caracterizacao.coordenadasDetalhadas || caracterizacao.coordenadas || draft.Coordenadas || draft.coordenadas),
+    tipoCoordenada: caracterizacao.tipoCoordenada,
+    outroFormatoCoordenada: caracterizacao.outroFormatoCoordenada,
+    latitude: caracterizacao.latitude,
+    latitudeDirecao: caracterizacao.latitudeDirecao,
+    longitude: caracterizacao.longitude,
+    longitudeDirecao: caracterizacao.longitudeDirecao,
+    coordenadaSedeMunicipio: caracterizacao.coordenadaSedeMunicipio,
+    comentarioCoordenada: caracterizacao.comentarioCoordenada,
+    bioma: caracterizacao.bioma,
+    faixaFronteira: caracterizacao.faixaFronteira,
+    sobreposicoes: caracterizacao.sobreposicoes,
+    tiposSobreposicao: caracterizacao.tiposSobreposicao,
+    detalheUcFederal: caracterizacao.detalheUcFederal,
+    detalheUcEstadual: caracterizacao.detalheUcEstadual,
+    detalheUcMunicipal: caracterizacao.detalheUcMunicipal,
+    detalheGlebaFederal: caracterizacao.detalheGlebaFederal,
+    detalheGlebaEstadual: caracterizacao.detalheGlebaEstadual,
+    detalheTerritorioQuilombola: caracterizacao.detalheTerritorioQuilombola,
+    detalheProjetoAssentamento: caracterizacao.detalheProjetoAssentamento,
+    detalheProjetoAssentamentoAgroextrativista: caracterizacao.detalheProjetoAssentamentoAgroextrativista,
+    detalheProjetoDesenvolvimentoSustentavel: caracterizacao.detalheProjetoDesenvolvimentoSustentavel,
+    detalheProjetoAssentamentoFlorestal: caracterizacao.detalheProjetoAssentamentoFlorestal,
+    detalheOutrasSobreposicoes: caracterizacao.detalheOutrasSobreposicoes,
+    indigenasArea: situacao.indigenasArea,
+    situacaoPosse: situacao.situacaoPosse,
+    vulnerabilidades: situacao.vulnerabilidades,
+    comunidadesTradicionais: situacao.comunidadesTradicionais,
+    tiposComunidadeTradicional: asListOrSplit(situacao.tiposComunidadeTradicional),
+    descricaoComunidadeTradicional: situacao.descricaoComunidadeTradicional,
+    povosIsolados: situacao.povosIsolados,
+    detalhesPovosIsolados: situacao.detalhesPovosIsolados,
+    outrasAcoesJudiciaisComunidade: situacao.outrasAcoesJudiciaisComunidade,
+    descricaoOutrasAcoesJudiciaisComunidade: situacao.descricaoOutrasAcoesJudiciaisComunidade,
+    ocupantesNaoIndigenas: situacao.ocupantesNaoIndigenas,
+    tiposOcupantesNaoIndigenas: situacao.tiposOcupantesNaoIndigenas,
+    outroOcupanteNaoIndigena: situacao.outroOcupanteNaoIndigena,
+    nivelTensaoLocal: situacao.nivelTensaoLocal,
+    informacoesAdicionais: situacao.informacoesAdicionais,
+    reivindicacaoAtivaAtual: encaminhamentos.reivindicacaoAtivaAtual,
+    relacaoOutrasReivindicacoes: encaminhamentos.relacaoOutrasReivindicacoes,
+    idsReivindicacoesRelacionadas: asListOrSplit(encaminhamentos.idsReivindicacoesRelacionadas).join(", "),
+    descricaoRelacaoReivindicacoes: encaminhamentos.descricaoRelacaoReivindicacoes
+  };
+}
+
+function prepararImpressaoPdf(dadosOrigem = null) {
+  document.querySelector(".pdf-print-root")?.remove();
+  const dados = normalizarDadosParaPdf(dadosOrigem);
+  const root = el("section", "pdf-print-root");
+  const title = el("header", "pdf-cover pdf-section");
+  title.append(
+    el("h1", "", "Formulário 2 - Produto 2"),
+    el("p", "pdf-footer-line", "CGID/DIDEM/FUNAI | 2026")
+  );
+  root.append(title);
+  root.append(criarResumoPdf(dados));
+  root.append(
+    criarPdfSecao("1. Dados do consultor", [
+      pdfField("Nome", dados.consultor?.nome),
+      pdfField("E-mail", dados.consultor?.email),
+      pdfField("Área de estudo", dados.consultor?.areaEstudo)
+    ]),
+    criarPdfSecao("2. Reivindicação", [
+      pdfField("ID", dados.reivindicacao?.id),
+      pdfField("Nome da reivindicação", dados.reivindicacao?.nome),
+      pdfField("Etnias", asList(dados.reivindicacao?.etnias).join(", ")),
+      pdfField("Outras etnias", asList(dados.reivindicacao?.outrasEtnias).join(", ")),
+      pdfTabela("Processos analisados", ["Número SEI", "Descrição"], asList(dados.reivindicacao?.processosAnalisados).map((item) => [item.numeroSei, item.descricao])),
+      pdfRadio("Roteiro de qualificação ou material semelhante?", dados.reivindicacao?.temRoteiro, ["Sim", "Não"]),
+      pdfField("Data do roteiro", formatarDataPdf(dados.reivindicacao?.dataRoteiro)),
+      pdfField("Número SEI do documento de qualificação", dados.reivindicacao?.numeroSeiQualificacao),
+      pdfField("Tipo da demanda", dados.reivindicacao?.tipoDemanda)
+    ]),
+    criarPdfSecao("2.1 Revisão de limites", [
+      pdfField("Nome da TI Original", dados.reivindicacao?.revisaoLimites?.nomeTiOriginal),
+      pdfField("Último ato de regularização", dados.reivindicacao?.revisaoLimites?.ultimoAtoRegularizacao),
+      pdfField("Nome do documento", dados.reivindicacao?.revisaoLimites?.nomeDocumentoRegularizacao),
+      pdfField("Data do documento", formatarDataPdf(dados.reivindicacao?.revisaoLimites?.dataDocumentoRegularizacao)),
+      pdfField("Data da primeira menção", formatarDataPdf(dados.reivindicacao?.revisaoLimites?.dataPrimeiraMencaoReivindicacao)),
+      pdfRadio("Dentro do prazo decadencial de 5 anos?", dados.reivindicacao?.revisaoLimites?.areaPrazoDecadencial, ["Sim", "Não"]),
+      pdfRadio("Erro grave e insanável na primeira demarcação?", dados.reivindicacao?.revisaoLimites?.erroPrimeiraDemarcacao, ["Sim", "Não"]),
+      pdfField("Tipos de erro", asList(dados.reivindicacao?.revisaoLimites?.tiposErroPrimeiraDemarcacao).join(", ")),
+      pdfField("Outro erro", dados.reivindicacao?.revisaoLimites?.outroErroPrimeiraDemarcacao),
+      pdfField("Observações", dados.reivindicacao?.revisaoLimites?.observacoesErrosDocumentos),
+      pdfRadio("Enquadra requisitos do STF?", dados.reivindicacao?.revisaoLimites?.enquadraRequisitosStf, ["Sim", "Não"])
+    ]),
+    criarPdfSecao("2.2 Reserva Indígena", [
+      pdfRadio("Comunidade indicou área específica?", dados.reivindicacao?.reservaIndigena?.comunidadeIndicouArea, ["Sim", "Não"]),
+      pdfRadio("Existe imóvel passível de destinação?", dados.reivindicacao?.reservaIndigena?.imovelDestinacaoComunidade, ["Sim", "Não"]),
+      pdfField("Informações sobre imóvel/destinação", dados.reivindicacao?.reservaIndigena?.informacoesImovelDestinacao)
+    ]),
+    criarPdfSecao("5. Caracterização da área reivindicada", [
+      pdfField("Estado", asList(dados.caracterizacaoArea?.estados).join(", ") || dados.caracterizacaoArea?.estado),
+      pdfField("Município", asList(dados.caracterizacaoArea?.municipios).join(", ") || dados.caracterizacaoArea?.municipio),
+      pdfField("Localização da demanda", dados.caracterizacaoArea?.localizacaoDemanda),
+      pdfRadio("Há identificação de coordenadas geográficas?", dados.caracterizacaoArea?.temCoordenadas, ["Sim", "Não"]),
+      pdfTabela("Coordenadas", ["Latitude", "Longitude", "Sede do município?", "Comentário"], asList(dados.caracterizacaoArea?.coordenadasDetalhadas).map((item) => [
+        item.latitude,
+        item.longitude,
+        item.coordenadaSedeMunicipio,
+        item.comentarioCoordenada
+      ])),
+      pdfField("Bioma", asList(dados.caracterizacaoArea?.bioma).join(", ")),
+      pdfRadio("Faixa de Fronteira", dados.caracterizacaoArea?.faixaFronteira, ["Sim", "Não"]),
+      pdfRadio("Sobreposições", dados.caracterizacaoArea?.sobreposicoes, ["Sim", "Não"]),
+      pdfField("Tipos de sobreposição", asList(dados.caracterizacaoArea?.tiposSobreposicao).join(", "))
+    ]),
+    criarPdfSecao("6. Situação da área reivindicada", [
+      pdfRadio("Indígenas estão na área reivindicada?", dados.situacaoArea?.indigenasArea, ["Sim", "Não"]),
+      pdfField("Situação de posse", dados.situacaoArea?.situacaoPosse),
+      pdfField("Critérios de vulnerabilidade", asList(dados.situacaoArea?.vulnerabilidades).join(", ")),
+      pdfRadio("Outras comunidades tradicionais?", dados.situacaoArea?.comunidadesTradicionais, ["Sim", "Não"]),
+      pdfField("Tipos de comunidade tradicional", asList(dados.situacaoArea?.tiposComunidadeTradicional).join(", ")),
+      pdfRadio("Povos isolados?", dados.situacaoArea?.povosIsolados, ["Sim", "Não"]),
+      pdfField("Detalhes de povos isolados", dados.situacaoArea?.detalhesPovosIsolados),
+      pdfRadio("Outras ações judiciais envolvendo a comunidade?", dados.situacaoArea?.outrasAcoesJudiciaisComunidade, ["Sim", "Não"]),
+      pdfField("Descrição de outras ações judiciais", dados.situacaoArea?.descricaoOutrasAcoesJudiciaisComunidade),
+      pdfRadio("Presença de Ocupantes Não Indígenas", dados.situacaoArea?.ocupantesNaoIndigenas, ["Sim", "Não"]),
+      pdfField("Tipos de ocupantes", asList(dados.situacaoArea?.tiposOcupantesNaoIndigenas).join(", ")),
+      pdfField("Outro ocupante", dados.situacaoArea?.outroOcupanteNaoIndigena),
+      pdfField("Nível de Tensão Local", dados.situacaoArea?.nivelTensaoLocal),
+      pdfField("Informações adicionais", dados.situacaoArea?.informacoesAdicionais)
+    ]),
+    criarPdfSecao("7. Encaminhamentos e recomendações", [
+      pdfRadio("Reivindicação permanece ativa e atual?", dados.encaminhamentos?.reivindicacaoAtivaAtual, ["Sim", "Não"]),
+      pdfRadio("Relação com outras reivindicações?", dados.encaminhamentos?.relacaoOutrasReivindicacoes, ["Sim", "Não"]),
+      pdfField("IDs relacionados", asList(dados.encaminhamentos?.idsReivindicacoesRelacionadas).join(", ")),
+      pdfField("Descrição da relação", dados.encaminhamentos?.descricaoRelacaoReivindicacoes)
+    ]),
+    criarAssinaturaGovPdf()
+  );
+
+  document.body.append(root);
+  window.addEventListener("afterprint", () => root.remove(), { once: true });
+}
+
+function normalizarDadosParaPdf(dadosOrigem) {
+  if (!dadosOrigem) {
+    const payload = normalizarPayloadParaPowerAutomate(buildPayload("Enviado"));
+    return typeof payload.formularioJson === "string" ? JSON.parse(payload.formularioJson) : payload.formularioJson;
+  }
+
+  const dadosConvertidos = converterJsonSerializadoEmObjeto(dadosOrigem);
+  const formularioJson = extrairFormularioJson(dadosConvertidos);
+  const dados = formularioJson || dadosConvertidos || {};
+  if (!dados.situacaoArea && dados.ocupacaoIndigena) dados.situacaoArea = dados.ocupacaoIndigena;
+  return dados;
+}
+
+function criarResumoPdf(dados) {
+  return criarPdfSecao("Resumo do rascunho", [
+    pdfField("ID", dados.reivindicacao?.id),
+    pdfField("Nome da reivindicação", dados.reivindicacao?.nome),
+    pdfField("Tipo da demanda", dados.reivindicacao?.tipoDemanda),
+    pdfField("Consultor", dados.consultor?.nome),
+    pdfField("Área de estudo", dados.consultor?.areaEstudo),
+    pdfField("Estado", asList(dados.caracterizacaoArea?.estados).join(", ") || dados.caracterizacaoArea?.estado),
+    pdfField("Município", asList(dados.caracterizacaoArea?.municipios).join(", ") || dados.caracterizacaoArea?.municipio)
+  ]);
+}
+
+function renderChips(container, values, dataName, ariaPrefix) {
+  if (!container) return;
+  container.innerHTML = "";
+  values.map(asText).filter(Boolean).forEach((value) => {
+    const chip = document.createElement("span");
+    const removeButton = document.createElement("button");
+    chip.className = "chip";
+    chip.append(document.createTextNode(value));
+    removeButton.type = "button";
+    removeButton.dataset[dataName] = value;
+    removeButton.setAttribute("aria-label", `${ariaPrefix} ${value}`);
+    removeButton.textContent = "×";
+    chip.append(removeButton);
+    container.append(chip);
+  });
+  updateFormularioJsonSizeMeter();
+}
+
+function addCoordenadaRow(coordenada = {}, shouldFocus = true) {
+  const row = document.createElement("tr");
+  row.className = "coordinate-row";
+  row.innerHTML = `
+    <td><input name="latitude" type="text" data-coordinate-value placeholder="Ex: 15° 47' 39&quot; S ou -15.7942" aria-label="Latitude"></td>
+    <td><input name="longitude" type="text" data-coordinate-value placeholder="Ex: 47° 52' 56&quot; O ou -47.8822" aria-label="Longitude"></td>
+    <td>
+      <select name="coordenadaSedeMunicipio" aria-label="Coordenada localizada na sede do município">
+        <option value="">Escolha</option>
+        <option>Sim</option>
+        <option>Não</option>
+      </select>
+    </td>
+    <td><input name="comentarioCoordenada" type="text" placeholder="Comentário da coordenada" aria-label="Comentário da coordenada"></td>
+    <td class="coordinate-actions">
+      <button type="button" class="icon-button remove-coordenada-btn" aria-label="Remover coordenada">×</button>
+      <button type="button" class="icon-button add-coordenada-row-btn" aria-label="Adicionar coordenada">+</button>
+    </td>
+  `;
+  coordenadasTableBody.append(row);
+  setCoordenadaRowValues(row, coordenada);
+  updateFormularioJsonSizeMeter();
+  if (shouldFocus) row.querySelector("input, select")?.focus();
+}
+
+function resetDocumentoRows() {}
+function resetMapaRows() {}
+function restoreDocumentoRows() {}
+function restoreLegacyDocumentoRow() {}
+function restoreMapaRows() {}
+
+function getDocumentosProcesso() {
+  if (!documentosTableBody) return [];
+  return [];
+}
+
+function getMapasCartograficos() {
+  return [];
+}
+
+function getDetalhesVulnerabilidades() {
+  return [];
+}
+
+function renderComunidadeTradicionalDetalhes() {}
+
+function getDetalhesComunidadesTradicionais() {
+  return [];
+}
+
+function shouldDisplayDateAsBrazil(name) {
+  return [
+    "dataRoteiro",
+    "dataDocumentoRegularizacao",
+    "dataPrimeiraMencaoReivindicacao"
+  ].includes(name);
+}
+
+function parseIdsRelacionados(value) {
+  return asText(value)
+    .split(/[,\n;]/)
+    .map((item) => item.trim())
+    .filter(Boolean);
 }
