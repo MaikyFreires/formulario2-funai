@@ -214,6 +214,50 @@
   margin-top: 8px;
 }
 
+.modality-panel {
+  width: 100%;
+  grid-column: 1 / -1;
+  margin-top: 24px;
+  padding-top: 22px;
+  border-top: 1px solid rgba(139, 61, 24, 0.18);
+}
+
+.modality-panel.is-visible {
+  display: grid;
+}
+
+.modality-panel__title {
+  margin: 0 0 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(139, 61, 24, 0.16);
+  color: var(--terracotta);
+  font-size: 1.05rem;
+  line-height: 1.25;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.modality-panel__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 40px;
+  row-gap: 20px;
+  align-items: start;
+}
+
+.modality-panel__grid > label,
+.modality-panel__grid > fieldset {
+  min-width: 0;
+}
+
+.modality-panel__full {
+  grid-column: 1 / -1;
+}
+
+.modality-panel textarea {
+  width: 100%;
+}
+
 /* Organização visual dos blocos específicos. */
 .status-process-grid {
   row-gap: 24px;

@@ -162,8 +162,8 @@
                   </fieldset>
 
                   <section class="conditional wide modality-panel" id="revisaoLimitesWrap">
-                    <h3>Revisão de limites</h3>
-                    <div class="field-grid compact">
+                    <h3 class="modality-panel__title">Revisão de limites</h3>
+                    <div class="modality-panel__grid">
                       <label>
                         Qual o nome da TI Original?
                         <input name="nomeTiOriginal" type="text" placeholder="Nome da Terra Indígena original">
@@ -204,7 +204,7 @@
                         </div>
                       </fieldset>
 
-                      <fieldset class="wide">
+                      <fieldset class="modality-panel__full">
                         Há documentação que revela grave e insanável erro na condução da primeira demarcação?
                         <div class="check-grid">
                           <label><input type="radio" name="erroPrimeiraDemarcacao" value="Sim"> Sim</label>
@@ -212,7 +212,7 @@
                         </div>
                       </fieldset>
 
-                      <fieldset class="conditional wide" id="tiposErroPrimeiraDemarcacaoWrap">
+                      <fieldset class="conditional modality-panel__full" id="tiposErroPrimeiraDemarcacaoWrap">
                         <legend>Tipo de erro identificado</legend>
                         <div class="check-grid">
                           <label><input type="checkbox" name="tiposErroPrimeiraDemarcacao" value="Vício Procedimental"> Vício Procedimental</label>
@@ -227,12 +227,12 @@
                         <input name="outroErroPrimeiraDemarcacao" type="text" placeholder="Descreva">
                       </label>
 
-                      <label class="wide">
+                      <label class="modality-panel__full">
                         Observações sobre os erros/documentos encontrados
                         <textarea name="observacoesErrosDocumentos" rows="3" placeholder="Registre observações breves"></textarea>
                       </label>
 
-                      <fieldset class="wide">
+                      <fieldset class="modality-panel__full">
                         A demanda se enquadra nos requisitos definidos pelo STF para a instauração de procedimento de revisão de limites?
                         <div class="check-grid">
                           <label><input type="radio" name="enquadraRequisitosStf" value="Sim"> Sim</label>
@@ -243,8 +243,8 @@
                   </section>
 
                   <section class="conditional wide modality-panel" id="reservaIndigenaWrap">
-                    <h3>Reserva Indígena</h3>
-                    <div class="field-grid compact">
+                    <h3 class="modality-panel__title">Reserva Indígena</h3>
+                    <div class="modality-panel__grid">
                       <fieldset>
                         A comunidade indicou uma área específica de interesse?
                         <div class="check-grid">
@@ -261,7 +261,7 @@
                         </div>
                       </fieldset>
 
-                      <label class="wide">
+                      <label class="modality-panel__full">
                         Informações sobre o imóvel/destinação
                         <textarea name="informacoesImovelDestinacao" rows="3" placeholder="Registre as informações disponíveis"></textarea>
                       </label>
@@ -307,15 +307,7 @@
                 <textarea name="localizacaoDemanda" rows="4" placeholder="Descreva onde se localiza a demanda e as localidades relevantes para os indígenas"></textarea>
               </label>
 
-              <fieldset>
-                Há identificação de coordenadas geográficas?
-                <div class="check-grid">
-                  <label><input type="radio" name="temCoordenadas" value="Sim"> Sim</label>
-                  <label><input type="radio" name="temCoordenadas" value="Não"> Não</label>
-                </div>
-              </fieldset>
-
-              <section class="conditional wide coordinate-table-section" id="coordenadasWrap" aria-labelledby="coordenadasTitle">
+              <section class="wide coordinate-table-section" id="coordenadasWrap" aria-labelledby="coordenadasTitle">
                 <div class="table-heading compact-heading">
                   <h3 id="coordenadasTitle">Coordenadas geográficas</h3>
                   <div class="coordinate-examples">

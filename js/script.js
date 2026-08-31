@@ -910,7 +910,6 @@ function updateConditionals({ renderDynamic = true } = {}) {
   setConditional("judicializadoDetalhes", getValue("estaJudicializado") === "Sim");
   setConditional("classificacaoJudicializacaoOutrosWrap", getCheckedValues("tiposAcaoJudicial").includes("Outros"));
   if (renderDynamic) renderAcoesJudiciaisDetalhadas();
-  setConditional("coordenadasWrap", getValue("temCoordenadas") === "Sim");
   setConditional("mapasCartograficosWrap", getValue("temMapaCartografico") === "Sim");
   setConditional("sobreposicoesWrap", getValue("sobreposicoes") === "Sim");
   setConditional("aldeiasComunidadesWrap", getValue("citaAldeiasComunidades") === "Sim");
@@ -979,7 +978,6 @@ function validateRequiredFields(isDraftSave = false) {
     { fieldId: "justificativaRevisao", label: "Justificativa da Revisão", isValid: () => getValue("temJustificativaRevisao") !== "Sim" || hasValue("justificativaRevisao") },
     { fieldId: "estados", label: "Estado", isValid: () => selectedEstados.length > 0 },
     { fieldId: "coordenacaoRegional", label: "Coordenação Regional", isValid: () => hasValue("coordenacaoRegional") },
-    { fieldId: "temCoordenadas", label: "Coordenadas geográficas", isValid: () => hasChecked("temCoordenadas") },
     { fieldId: "temMapaCartografico", label: "Mapa e material cartográfico", isValid: () => hasChecked("temMapaCartografico") },
     { fieldId: "citaAldeiasComunidades", label: "Aldeias ou comunidades", isValid: () => hasChecked("citaAldeiasComunidades") },
     { fieldId: "contextoUrbano", label: "Contexto urbano", isValid: () => hasChecked("contextoUrbano") },
@@ -1218,7 +1216,6 @@ function isRequiredFieldResolved(fieldId) {
     justificativaRevisao: () => getValue("temJustificativaRevisao") !== "Sim" || hasValue("justificativaRevisao"),
     estados: () => selectedEstados.length > 0,
     coordenacaoRegional: () => hasValue("coordenacaoRegional"),
-    temCoordenadas: () => hasChecked("temCoordenadas"),
     temMapaCartografico: () => hasChecked("temMapaCartografico"),
     citaAldeiasComunidades: () => hasChecked("citaAldeiasComunidades"),
     contextoUrbano: () => hasChecked("contextoUrbano"),
@@ -1747,7 +1744,6 @@ function montarFormularioJson(statusFormulario = "Rascunho", now = new Date().to
     },
     caracterizacaoArea: {
       localizacaoDemanda: asText(getValue("localizacaoDemanda")),
-      temCoordenadas: asText(getValue("temCoordenadas")),
       coordenadas,
       coordenadasDetalhadas,
       latitude: asText(primeiraCoordenada.latitude),
@@ -2097,7 +2093,6 @@ function prepararImpressaoPdf(dadosOrigem = null) {
     ]),
     criarPdfSecao("5. Caracterização da área", [
       pdfField("Localização da demanda", dados.caracterizacaoArea?.localizacaoDemanda),
-      pdfRadio("Há identificação de coordenadas geográficas?", dados.caracterizacaoArea?.temCoordenadas, ["Sim", "Não", "Sem informação"]),
       pdfTabela("Coordenadas", ["Latitude", "Longitude", "Sede do município?", "Comentário"], asList(dados.caracterizacaoArea?.coordenadasDetalhadas).map((item) => [
         item.latitude,
         item.longitude,
@@ -2228,7 +2223,6 @@ function montarDadosLegadosParaPdf(values) {
     },
     caracterizacaoArea: {
       localizacaoDemanda: values.localizacaoDemanda,
-      temCoordenadas: values.temCoordenadas,
       coordenadasDetalhadas: values.coordenadas,
       temMapaCartografico: values.temMapaCartografico,
       mapasCartograficos: values.mapasCartograficos,
@@ -3175,7 +3169,6 @@ function flattenDraft(draft) {
     detalhesDecisao: draft.statusProcesso?.detalhesDecisao,
     numeroProcessoJudicial: draft.statusProcesso?.numeroProcessoJudicial,
     localizacaoDemanda: draft.caracterizacaoArea?.localizacaoDemanda,
-    temCoordenadas: draft.caracterizacaoArea?.temCoordenadas,
     coordenadas: normalizeCoordenadas(draft.caracterizacaoArea?.coordenadasDetalhadas || draft.caracterizacaoArea?.coordenadas || draft.Coordenadas || draft.coordenadas),
     tipoCoordenada: draft.caracterizacaoArea?.tipoCoordenada,
     outroFormatoCoordenada: draft.caracterizacaoArea?.outroFormatoCoordenada,
@@ -4678,7 +4671,6 @@ function normalizeDetalhesComunidadesTradicionais(value) {
 }
 
 function areCoordenadasValid() {
-  if (getValue("temCoordenadas") !== "Sim") return true;
   const coordenadas = getCoordenadasDetalhadas();
   return coordenadas.some((coordenada) =>
     coordenada.latitude &&
@@ -4963,7 +4955,6 @@ function updateConditionals({ renderDynamic = true } = {}) {
   setConditional("dataRoteiroWrap", getValue("temRoteiro") === "Sim");
   setConditional("numeroSeiQualificacaoWrap", getValue("temRoteiro") === "Sim");
   setConditional("outraEtniaWrap", selectedEtnias.includes("Outros"));
-  setConditional("coordenadasWrap", getValue("temCoordenadas") === "Sim");
   setConditional("sobreposicoesWrap", getValue("sobreposicoes") === "Sim");
   setConditional("indigenasAreaWrap", getValue("indigenasArea") === "Sim");
   setConditional("comunidadesTradicionaisWrap", getValue("comunidadesTradicionais") === "Sim");
@@ -5013,8 +5004,7 @@ function validateRequiredFields(isDraftSave = false) {
     { fieldId: "estados", label: "Estado", isValid: () => selectedEstados.length > 0 },
     { fieldId: "municipios", label: "Município", isValid: () => selectedMunicipios.length > 0 },
     { fieldId: "localizacaoDemanda", label: "Localização da demanda", isValid: () => hasValue("localizacaoDemanda") },
-    { fieldId: "temCoordenadas", label: "Coordenadas geográficas", isValid: () => hasChecked("temCoordenadas") },
-    { fieldId: "coordenadas", label: "Coordenadas geográficas", isValid: () => getValue("temCoordenadas") !== "Sim" || areCoordenadasValid() },
+    { fieldId: "coordenadas", label: "Coordenadas geográficas", isValid: () => areCoordenadasValid() },
     { fieldId: "bioma", label: "Bioma", isValid: () => getCheckedValues("bioma").length > 0 },
     { fieldId: "faixaFronteira", label: "Faixa de Fronteira", isValid: () => hasChecked("faixaFronteira") },
     { fieldId: "sobreposicoes", label: "Sobreposições", isValid: () => hasChecked("sobreposicoes") },
@@ -5056,8 +5046,8 @@ function montarFormularioJson(statusFormulario = "Rascunho", now = new Date().to
   const isReserva = hasDemand([tipoDemanda], "Reserva Indígena");
   const estados = asList(getSelectedEstados());
   const municipios = asList(getSelectedMunicipios());
-  const coordenadasDetalhadas = getValue("temCoordenadas") === "Sim" ? asList(getCoordenadasDetalhadas()) : [];
-  const coordenadas = getValue("temCoordenadas") === "Sim" ? asList(getCoordenadasGeograficas()) : [];
+  const coordenadasDetalhadas = asList(getCoordenadasDetalhadas());
+  const coordenadas = asList(getCoordenadasGeograficas());
   const primeiraCoordenada = coordenadasDetalhadas[0] || {};
   const tiposSobreposicao = getValue("sobreposicoes") === "Sim" ? asList(getCheckedValues("tiposSobreposicao")) : [];
   const tiposErro = isRevisao && getValue("erroPrimeiraDemarcacao") === "Sim" ? asList(getCheckedValues("tiposErroPrimeiraDemarcacao")) : [];
@@ -5114,7 +5104,6 @@ function montarFormularioJson(statusFormulario = "Rascunho", now = new Date().to
       municipio: asText(municipios.join(", ")),
       municipios,
       localizacaoDemanda: asText(getValue("localizacaoDemanda")),
-      temCoordenadas: asText(getValue("temCoordenadas")),
       coordenadas,
       coordenadasDetalhadas,
       latitude: asText(primeiraCoordenada.latitude),
@@ -5275,7 +5264,6 @@ function flattenDraft(draft) {
     estados: asListOrSplit(caracterizacao.estados || caracterizacao.estado || draft.Estados || draft.estados),
     municipios: asListOrSplit(caracterizacao.municipios || caracterizacao.municipio || draft.Municipios || draft.municipios),
     localizacaoDemanda: caracterizacao.localizacaoDemanda,
-    temCoordenadas: caracterizacao.temCoordenadas,
     coordenadas: normalizeCoordenadas(caracterizacao.coordenadasDetalhadas || caracterizacao.coordenadas || draft.Coordenadas || draft.coordenadas),
     tipoCoordenada: caracterizacao.tipoCoordenada,
     outroFormatoCoordenada: caracterizacao.outroFormatoCoordenada,
@@ -5372,7 +5360,6 @@ function prepararImpressaoPdf(dadosOrigem = null) {
       pdfField("Estado", asList(dados.caracterizacaoArea?.estados).join(", ") || dados.caracterizacaoArea?.estado),
       pdfField("Município", asList(dados.caracterizacaoArea?.municipios).join(", ") || dados.caracterizacaoArea?.municipio),
       pdfField("Localização da demanda", dados.caracterizacaoArea?.localizacaoDemanda),
-      pdfRadio("Há identificação de coordenadas geográficas?", dados.caracterizacaoArea?.temCoordenadas, ["Sim", "Não"]),
       pdfTabela("Coordenadas", ["Latitude", "Longitude", "Sede do município?", "Comentário"], asList(dados.caracterizacaoArea?.coordenadasDetalhadas).map((item) => [
         item.latitude,
         item.longitude,
@@ -5504,6 +5491,13 @@ function renderComunidadeTradicionalDetalhes() {}
 
 function getDetalhesComunidadesTradicionais() {
   return [];
+}
+
+function areCoordenadasValid() {
+  return getCoordenadasDetalhadas().some((coordenada) =>
+    coordenada.latitude &&
+    coordenada.longitude
+  );
 }
 
 function shouldDisplayDateAsBrazil(name) {

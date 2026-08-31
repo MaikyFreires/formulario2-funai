@@ -23,6 +23,16 @@
 
 }
 
+@media (max-width: 900px) {
+  .modality-panel__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .modality-panel__full {
+    grid-column: auto;
+  }
+}
+
 @media (max-width: 760px) {
   .app-shell {
     padding-top: 12px;

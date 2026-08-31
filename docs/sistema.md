@@ -21,7 +21,6 @@ O Formulario 2 implementa a parte `FORMULARIO PRODUTO 2` do roteiro de qualifica
 - `reservaIndigena.comunidadeIndicouArea`
 - `reservaIndigena.imovelDestinacaoComunidade`
 - `reservaIndigena.informacoesImovelDestinacao`
-- `caracterizacaoArea.temCoordenadas`
 - `caracterizacaoArea.coordenadas`
 - `caracterizacaoArea.coordenadasDetalhadas`
 - `caracterizacaoArea.latitude`
@@ -47,6 +46,7 @@ O Formulario 2 implementa a parte `FORMULARIO PRODUTO 2` do roteiro de qualifica
 - `estaJudicializado`
 - `tiposAcaoJudicial`
 - detalhes de acoes judiciais contra a FUNAI
+- `temCoordenadas`
 - mapas cartograficos
 - `citaAldeiasComunidades`
 - `contextoUrbano`
