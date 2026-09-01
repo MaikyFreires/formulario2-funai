@@ -2,8 +2,7 @@
 
 Responsabilidades de rascunhos:
 
-- listar rascunhos com `LIST_DRAFTS_URL`
-- abrir rascunho com `LOAD_DRAFT_URL`
+- listar rascunhos com `postFormulario2("/rascunhos", payload)`
+- abrir rascunho com `postFormulario2("/carregar-rascunho", payload)`
 - manter `formularioId` ativo na sessao
-- salvar rascunho via `POWER_AUTOMATE_URL`
-
+- salvar rascunho via `postFormulario2("/receber", payload)`

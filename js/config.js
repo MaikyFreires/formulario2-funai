@@ -1,7 +1,7 @@
 window.APP_CONFIG = {
-  POWER_AUTOMATE_URL: "https://defaultd9e53f92849b40d084e12597903730.66.environment.api.powerplatform.com/powerautomate/automations/direct/workflows/6fe542ad93f04cdfbffea31dd594d4d5/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=RgG4AQB67A2QGEesnZjokQySTc35mbSSBHdFP6WoVqA",
-  VERIFY_ACCESS_URL: "https://defaultd9e53f92849b40d084e12597903730.66.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/a130a6c3757c4890951e2aa5528e7e2b/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=9rFYpYVrl3AsBUMq3o-ECh5_PG-pXcdbvrwNWUCc4ew",
-  LIST_DRAFTS_URL: "https://defaultd9e53f92849b40d084e12597903730.66.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/1b87d82d206a46788ac0253e40d2c6ee/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=79cbhBNPU9CYlO4FKWFVrGjjf206heoikopnADM8BeU",
-  LOAD_DRAFT_URL: "https://defaultd9e53f92849b40d084e12597903730.66.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/083f7793b213425ca05726611ed551b5/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=7OPGKKn8B7MnQ5QIbpCsuAYykooTbm1HEpEFA0z7eTk",
-  LIST_SENT_URL: "https://defaultd9e53f92849b40d084e12597903730.66.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/90b1465d314a42228f755fd161ff4e87/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=x1euggt50Z-vsypOSzwVxAaI4IyZi07YSMtVwOYYYSo"
+  VERIFY_ACCESS_URL: "",
+};
+
+window.FORMULARIO2_CONFIG = {
+  apiBaseUrl: "https://URL_PUBLICA_DO_WORKER"
 };

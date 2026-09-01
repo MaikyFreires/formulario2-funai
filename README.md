@@ -27,14 +27,14 @@ O Formulario 2 / Produto 2 nao e uma copia funcional do Formulario 1. Ele reapro
 O campo `tipoDemanda` centraliza as regras:
 
 - `Identificacao`: exibe apenas os campos gerais da reivindicacao.
-- `Revisao de limites`: exibe `revisaoLimites`, com TI original, ato de regularizacao, documentos, prazo decadencial, erro grave/insanavel, tipos de erro, observacoes e enquadramento STF.
+- `Revisao de limites`: exibe `revisaoLimites`, com TI original, ato de regularizacao, documentos, prazo decadencial, erro grave/insanavel, tipos de erro e enquadramento STF.
 - `Reserva Indigena`: exibe `reservaIndigena`, com indicacao de area, imovel passivel de destinacao e informacoes sobre o imovel/destinacao.
 
 Valores de blocos que nao correspondem a modalidade selecionada nao sao serializados no `FormularioJson`.
 
 ## SharePoint
 
-O envio continua usando `POWER_AUTOMATE_URL`. Campos existentes reaproveitados incluem consultor, ID, nome da reivindicacao, etnias, processos analisados, UF/municipio, bioma, faixa de fronteira, sobreposicoes, vulnerabilidades, comunidades tradicionais, povos isolados, acoes judiciais da comunidade e informacoes adicionais.
+O Formulario 2 usa `FORMULARIO2_CONFIG.apiBaseUrl` para chamar o proxy Cloudflare Worker. As URLs reais do Power Automate ficam apenas em secrets do Worker. Os dados completos seguem preservados no `FormularioJson`.
 
 Novos campos do Produto 2 devem ter colunas SharePoint criadas manualmente antes de serem persistidos em colunas dedicadas. Sem o esquema real da lista, o sistema nao inventa `InternalName`; os dados completos seguem preservados no `FormularioJson`.
 

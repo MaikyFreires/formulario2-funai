@@ -1,10 +1,13 @@
 const APP_CONFIG = window.APP_CONFIG || {};
 const FORMULARIO2_CONFIG = window.FORMULARIO2_CONFIG || {};
-const POWER_AUTOMATE_URL = FORMULARIO2_CONFIG.receberFormulario || FORMULARIO2_CONFIG.RECEBER_FORMULARIO_2_URL || "";
+const API_BASE_URL = FORMULARIO2_CONFIG.apiBaseUrl || FORMULARIO2_CONFIG.API_BASE_URL || "";
+const FORMULARIO2_ROUTES = {
+  receber: "/receber",
+  enviados: "/enviados",
+  rascunhos: "/rascunhos",
+  carregarRascunho: "/carregar-rascunho"
+};
 const VERIFY_ACCESS_URL = APP_CONFIG.VERIFY_ACCESS_URL || "";
-const LIST_DRAFTS_URL = FORMULARIO2_CONFIG.listarRascunhos || FORMULARIO2_CONFIG.LISTAR_RASCUNHOS_FORMULARIO_2_URL || "";
-const LOAD_DRAFT_URL = FORMULARIO2_CONFIG.carregarRascunho || FORMULARIO2_CONFIG.CARREGAR_RASCUNHO_FORMULARIO_2_URL || "";
-const LIST_SENT_URL = FORMULARIO2_CONFIG.listarEnviados || FORMULARIO2_CONFIG.LISTAR_ENVIADOS_FORMULARIO_2_URL || "";
 const SECRET_TOKEN = "FUNAI_FORM_SECRET_2026";
 const AUTHORIZED_EMAIL_KEY = "consultorEmailAutorizado";
 const ACCESS_SESSION_KEY = "consultorSessaoAtiva";
@@ -1855,12 +1858,12 @@ async function salvarFormulario(statusFormulario = "Rascunho", options = {}) {
     return false;
   }
 
-  if (!POWER_AUTOMATE_URL) {
+  if (!API_BASE_URL || API_BASE_URL.includes("URL_PUBLICA_DO_WORKER")) {
     if (automatico) {
       setAutosaveStatus("Autosave não configurado.", "error");
       return false;
     }
-    showMessage("Configure receberFormulario no arquivo js/config.local.js antes de salvar.", "error");
+    showMessage("Configure apiBaseUrl no arquivo js/config.js antes de salvar.", "error");
     return false;
   }
 
@@ -1911,46 +1914,21 @@ async function salvarFormulario(statusFormulario = "Rascunho", options = {}) {
   }
 
   try {
-    const response = await fetch(POWER_AUTOMATE_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(payloadPowerAutomate)
-    });
-    console.log(response.status, response.statusText);
+    await postFormulario2(FORMULARIO2_ROUTES.receber, payloadPowerAutomate);
 
-    if (response.ok) {
-      const data = await readJsonIfAvailable(response);
-      if (data?.success === false) throw new Error("Fluxo retornou success=false.");
+    activePersistenceMode = "update";
+    sessionStorage.setItem(ACTIVE_FORM_ID_KEY, payloadPowerAutomate.formularioId);
 
-      activePersistenceMode = "update";
-      sessionStorage.setItem(ACTIVE_FORM_ID_KEY, payloadPowerAutomate.formularioId);
+    if (automatico) return true;
 
-      if (automatico) return true;
-
-      if (!isDraft) {
-        sessionStorage.removeItem(ACTIVE_FORM_ID_KEY);
-        showDashboard(getAuthorizedEmail(), "Seu formulário foi enviado com sucesso.");
-        return true;
-      }
-
-      showMessage(isUpdate ? "Rascunho atualizado no SharePoint." : "Rascunho criado no SharePoint.", "success");
+    if (!isDraft) {
+      sessionStorage.removeItem(ACTIVE_FORM_ID_KEY);
+      showDashboard(getAuthorizedEmail(), "Seu formulário foi enviado com sucesso.");
       return true;
     }
 
-    const erro = await response.text();
-
-    if (response.status === 403) {
-      if (automatico) {
-        setAutosaveStatus("Erro ao salvar automaticamente", "error");
-        return false;
-      }
-      showMessage(isDraft ? "Este e-mail não está autorizado." : "Este e-mail não está autorizado a enviar o formulário.", "error");
-      return false;
-    }
-
-    throw new Error(`Erro ao chamar Power Automate: ${response.status} - ${erro}`);
+    showMessage(isUpdate ? "Rascunho atualizado no SharePoint." : "Rascunho criado no SharePoint.", "success");
+    return true;
   } catch (error) {
     console.error(error);
     if (automatico) {
@@ -2302,7 +2280,7 @@ async function saveDraft() {
 async function listarRascunhos(email = getAuthorizedEmail()) {
   await listarRelatorios({
     title: "Meus rascunhos",
-    url: LIST_DRAFTS_URL,
+    route: FORMULARIO2_ROUTES.rascunhos,
     emptyMessage: "Nenhum rascunho encontrado.",
     mode: "draft",
     email
@@ -2312,40 +2290,27 @@ async function listarRascunhos(email = getAuthorizedEmail()) {
 async function listarEnviados() {
   await listarRelatorios({
     title: "Relatórios enviados",
-    url: LIST_SENT_URL,
+    route: FORMULARIO2_ROUTES.enviados,
     emptyMessage: "Nenhum relatório enviado encontrado.",
     mode: "sent"
   });
 }
 
-async function listarRelatorios({ title, url, emptyMessage, mode = "draft", email = getAuthorizedEmail() }) {
+async function listarRelatorios({ title, route, emptyMessage, mode = "draft", email = getAuthorizedEmail() }) {
   currentReportListMode = mode;
   showReportList(title, "Carregando...");
 
-  if (!url) {
-    showReportListMessage("Configure a URL correspondente no arquivo js/config.local.js.", "error");
+  if (!API_BASE_URL || API_BASE_URL.includes("URL_PUBLICA_DO_WORKER")) {
+    showReportListMessage("Configure apiBaseUrl no arquivo js/config.js.", "error");
     return;
   }
 
   try {
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        consultor: {
-          email
-        }
-      })
+    const data = await postFormulario2(route, {
+      consultor: {
+        email
+      }
     });
-    console.log(response.status, response.statusText);
-
-    if (!response.ok) throw new Error(`Falha ao listar relatórios: ${response.status}`);
-
-    const data = await readJsonIfAvailable(response);
-    if (data?.success === false) throw new Error("Fluxo retornou success=false.");
-
     const relatorios = normalizarListaRelatorios(data);
     if (!relatorios) throw new Error("Resposta sem lista de itens.");
     renderReportList(relatorios, emptyMessage);
@@ -2383,34 +2348,23 @@ async function carregarFormulario(formularioId, mode = "draft") {
     return;
   }
 
-  if (!LOAD_DRAFT_URL) {
-    showReportListMessage("Configure carregarRascunho no arquivo js/config.local.js.", "error");
+  if (!API_BASE_URL || API_BASE_URL.includes("URL_PUBLICA_DO_WORKER")) {
+    showReportListMessage("Configure apiBaseUrl no arquivo js/config.js.", "error");
     return;
   }
 
   try {
     showReportListMessage(mode === "sent" ? "Carregando relatório enviado..." : "Carregando rascunho...", "success");
-    const response = await fetch(LOAD_DRAFT_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        formularioId: id,
-        reivindicacaoId: expectedReivindicacaoId,
-        idReivindicacao: expectedReivindicacaoId,
-        consultorIdentidade: expectedConsultor,
-        chaveRelatorio: selectionKey,
-        consultor: {
-          email: getAuthorizedEmail()
-        }
-      })
+    const data = await postFormulario2(FORMULARIO2_ROUTES.carregarRascunho, {
+      formularioId: id,
+      reivindicacaoId: expectedReivindicacaoId,
+      idReivindicacao: expectedReivindicacaoId,
+      consultorIdentidade: expectedConsultor,
+      chaveRelatorio: selectionKey,
+      consultor: {
+        email: getAuthorizedEmail()
+      }
     });
-    console.log(response.status, response.statusText);
-
-    if (!response.ok) throw new Error(`Falha ao carregar relatório: ${response.status}`);
-
-    const data = await readJsonIfAvailable(response);
     const relatorio = normalizarRascunhoCarregado(data, resumo);
     if (!relatorio) {
       showReportListMessage(mode === "sent" ? "Relatório enviado não encontrado." : "Rascunho não encontrado.", "error");
@@ -2658,30 +2612,20 @@ async function carregarRelatorioCompletoDaLista(resumo, formularioId, mode = "dr
 
   if (extrairFormularioJson(resumo)) return resumo;
 
-  if (!LOAD_DRAFT_URL) {
-    throw new Error("carregarRascunho n\u00e3o configurado.");
+  if (!API_BASE_URL || API_BASE_URL.includes("URL_PUBLICA_DO_WORKER")) {
+    throw new Error("apiBaseUrl n\u00e3o configurada.");
   }
 
-  const response = await fetch(LOAD_DRAFT_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      formularioId: id,
-      reivindicacaoId: expectedReivindicacaoId,
-      idReivindicacao: expectedReivindicacaoId,
-      consultorIdentidade: expectedConsultor,
-      chaveRelatorio: selectionKey,
-      consultor: {
-        email: getAuthorizedEmail()
-      }
-    })
+  const data = await postFormulario2(FORMULARIO2_ROUTES.carregarRascunho, {
+    formularioId: id,
+    reivindicacaoId: expectedReivindicacaoId,
+    idReivindicacao: expectedReivindicacaoId,
+    consultorIdentidade: expectedConsultor,
+    chaveRelatorio: selectionKey,
+    consultor: {
+      email: getAuthorizedEmail()
+    }
   });
-
-  if (!response.ok) throw new Error(`Falha ao carregar relat\u00f3rio: ${response.status}`);
-
-  const data = await readJsonIfAvailable(response);
   const relatorio = normalizarRascunhoCarregado(data, resumo);
   if (!relatorio) {
     throw new Error(mode === "sent" ? "Relatório enviado não encontrado." : "Rascunho não encontrado.");
@@ -3382,6 +3326,33 @@ async function readJsonIfAvailable(response) {
   } catch (error) {
     return null;
   }
+}
+
+function getFormulario2ApiUrl(route) {
+  const baseUrl = String(API_BASE_URL || "").replace(/\/+$/, "");
+  const path = String(route || "").startsWith("/") ? route : `/${route}`;
+  return `${baseUrl}${path}`;
+}
+
+async function postFormulario2(route, payload) {
+  if (!API_BASE_URL || API_BASE_URL.includes("URL_PUBLICA_DO_WORKER")) {
+    throw new Error("API_BASE_URL nao configurada.");
+  }
+
+  const response = await fetch(getFormulario2ApiUrl(route), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(payload)
+  });
+  console.log(response.status, response.statusText);
+
+  const data = await readJsonIfAvailable(response);
+  if (!response.ok) throw new Error(`Falha na API do Formulario 2: ${response.status}`);
+  if (data?.success === false) throw new Error("Fluxo retornou success=false.");
+
+  return data;
 }
 
 function getStoredAuthorizedEmail() {

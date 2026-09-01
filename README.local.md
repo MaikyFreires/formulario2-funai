@@ -4,19 +4,18 @@ Este arquivo e somente para uso interno/local e nao deve ir para o GitHub.
 
 ## Arquivos locais
 
-- `js/config.js`: URLs reais dos fluxos do Power Automate.
+- `js/config.js`: configuracao publica sem secrets.
+- `js/config.local.js`: sobrescritas locais sem commit.
 - `README.local.md`: anotacoes internas de configuracao e publicacao.
 
 Esses arquivos devem ficar no `.gitignore`.
 
-## Configuracao do Power Automate
+## Configuracao
 
 1. Copie `js/config.example.js` para `js/config.js`, se o arquivo ainda nao existir.
-2. Preencha `VERIFY_ACCESS_URL` com a URL HTTP POST que verifica o e-mail autorizado.
-3. Preencha `POWER_AUTOMATE_URL` com a URL HTTP POST que salva rascunho/envio no SharePoint.
-4. Preencha `LIST_DRAFTS_URL` com a URL HTTP POST que lista rascunhos.
-5. Preencha `LOAD_DRAFT_URL` com a URL HTTP POST que carrega um item pelo `formularioId`.
-6. Preencha `LIST_SENT_URL` com a URL HTTP POST que lista formularios enviados.
+2. Preencha `VERIFY_ACCESS_URL` somente quando o fluxo de acesso estiver definido para este ambiente.
+3. Preencha `FORMULARIO2_CONFIG.apiBaseUrl` com a URL publica do Cloudflare Worker.
+4. Cadastre as URLs reais do Power Automate como secrets no Cloudflare Worker, nunca no frontend.
 
 ## Teste local
 
