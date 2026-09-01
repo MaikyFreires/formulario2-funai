@@ -3,5 +3,8 @@ window.APP_CONFIG = {
 };
 
 window.FORMULARIO2_CONFIG = {
-  apiBaseUrl: "https://URL_PUBLICA_DO_WORKER"
+  receberFormulario: "",
+  listarEnviados: "",
+  listarRascunhos: "",
+  carregarRascunho: ""
 };

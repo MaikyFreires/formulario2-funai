@@ -1,11 +1,16 @@
 const APP_CONFIG = window.APP_CONFIG || {};
 const FORMULARIO2_CONFIG = window.FORMULARIO2_CONFIG || {};
-const API_BASE_URL = FORMULARIO2_CONFIG.apiBaseUrl || FORMULARIO2_CONFIG.API_BASE_URL || "";
+const FORMULARIO2_ENDPOINTS = {
+  receber: FORMULARIO2_CONFIG.receberFormulario || "",
+  enviados: FORMULARIO2_CONFIG.listarEnviados || "",
+  rascunhos: FORMULARIO2_CONFIG.listarRascunhos || "",
+  carregarRascunho: FORMULARIO2_CONFIG.carregarRascunho || ""
+};
 const FORMULARIO2_ROUTES = {
-  receber: "/receber",
-  enviados: "/enviados",
-  rascunhos: "/rascunhos",
-  carregarRascunho: "/carregar-rascunho"
+  receber: "receber",
+  enviados: "enviados",
+  rascunhos: "rascunhos",
+  carregarRascunho: "carregarRascunho"
 };
 const VERIFY_ACCESS_URL = APP_CONFIG.VERIFY_ACCESS_URL || "";
 const SECRET_TOKEN = "FUNAI_FORM_SECRET_2026";
@@ -277,7 +282,7 @@ async function handleAccessSubmit(event) {
   }
 
   if (!VERIFY_ACCESS_URL) {
-    showAccessMessage("Configure VERIFY_ACCESS_URL no arquivo js/config.js.", "error");
+    showAccessMessage("Configure VERIFY_ACCESS_URL no arquivo js/config.local.js.", "error");
     return;
   }
 
@@ -1858,12 +1863,12 @@ async function salvarFormulario(statusFormulario = "Rascunho", options = {}) {
     return false;
   }
 
-  if (!API_BASE_URL || API_BASE_URL.includes("URL_PUBLICA_DO_WORKER")) {
+  if (!getFormulario2ApiUrl(FORMULARIO2_ROUTES.receber)) {
     if (automatico) {
       setAutosaveStatus("Autosave não configurado.", "error");
       return false;
     }
-    showMessage("Configure apiBaseUrl no arquivo js/config.js antes de salvar.", "error");
+    showMessage("Configure o endpoint de recebimento no arquivo js/config.local.js antes de salvar.", "error");
     return false;
   }
 
@@ -2300,8 +2305,8 @@ async function listarRelatorios({ title, route, emptyMessage, mode = "draft", em
   currentReportListMode = mode;
   showReportList(title, "Carregando...");
 
-  if (!API_BASE_URL || API_BASE_URL.includes("URL_PUBLICA_DO_WORKER")) {
-    showReportListMessage("Configure apiBaseUrl no arquivo js/config.js.", "error");
+  if (!getFormulario2ApiUrl(route)) {
+    showReportListMessage("Configure os endpoints do Formulário 2 no arquivo js/config.local.js.", "error");
     return;
   }
 
@@ -2348,8 +2353,8 @@ async function carregarFormulario(formularioId, mode = "draft") {
     return;
   }
 
-  if (!API_BASE_URL || API_BASE_URL.includes("URL_PUBLICA_DO_WORKER")) {
-    showReportListMessage("Configure apiBaseUrl no arquivo js/config.js.", "error");
+  if (!getFormulario2ApiUrl(FORMULARIO2_ROUTES.carregarRascunho)) {
+    showReportListMessage("Configure os endpoints do Formulário 2 no arquivo js/config.local.js.", "error");
     return;
   }
 
@@ -2612,8 +2617,8 @@ async function carregarRelatorioCompletoDaLista(resumo, formularioId, mode = "dr
 
   if (extrairFormularioJson(resumo)) return resumo;
 
-  if (!API_BASE_URL || API_BASE_URL.includes("URL_PUBLICA_DO_WORKER")) {
-    throw new Error("apiBaseUrl n\u00e3o configurada.");
+  if (!getFormulario2ApiUrl(FORMULARIO2_ROUTES.carregarRascunho)) {
+    throw new Error("Endpoint de carregamento não configurado.");
   }
 
   const data = await postFormulario2(FORMULARIO2_ROUTES.carregarRascunho, {
@@ -3329,17 +3334,16 @@ async function readJsonIfAvailable(response) {
 }
 
 function getFormulario2ApiUrl(route) {
-  const baseUrl = String(API_BASE_URL || "").replace(/\/+$/, "");
-  const path = String(route || "").startsWith("/") ? route : `/${route}`;
-  return `${baseUrl}${path}`;
+  return String(FORMULARIO2_ENDPOINTS[route] || "").trim();
 }
 
 async function postFormulario2(route, payload) {
-  if (!API_BASE_URL || API_BASE_URL.includes("URL_PUBLICA_DO_WORKER")) {
-    throw new Error("API_BASE_URL nao configurada.");
+  const endpointUrl = getFormulario2ApiUrl(route);
+  if (!endpointUrl) {
+    throw new Error("Endpoint do Formulário 2 não configurado.");
   }
 
-  const response = await fetch(getFormulario2ApiUrl(route), {
+  const response = await fetch(endpointUrl, {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
