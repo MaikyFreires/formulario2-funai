@@ -112,44 +112,6 @@
               </section>
 
               <section class="field-section">
-                <h3>Processo e qualificação</h3>
-                <div class="field-grid compact">
-                  <div class="process-list wide" id="processList">
-                    <div class="process-item">
-                      <label class="process-field">
-                        Número SEI do processo analisado
-                        <input name="numeroSeiProcessoAnalisado" type="text" placeholder="Número SEI do processo analisado">
-                      </label>
-                      <label class="process-field">
-                        Descrição do processo analisado
-                        <textarea name="descricaoProcessoAnalisado" rows="1" placeholder="Descreva o tema principal do processo analisado"></textarea>
-                      </label>
-                      <div class="process-item-actions">
-                        <button type="button" class="icon-button add-processo-analisado-btn" aria-label="Adicionar processo analisado">+</button>
-                        <button type="button" class="icon-button danger remove-processo-analisado-btn" aria-label="Remover processo analisado">×</button>
-                      </div>
-                    </div>
-                  </div>
-
-                  <fieldset class="roteiro-group">
-                    Há roteiro de qualificação ou material semelhante?
-                    <div class="check-grid">
-                      <label><input type="radio" name="temRoteiro" value="Sim"> Sim</label>
-                      <label><input type="radio" name="temRoteiro" value="Não"> Não</label>
-                    </div>
-                    <label class="conditional inline-date" id="dataRoteiroWrap">
-                      Data do roteiro
-                      <input name="dataRoteiro" type="text" inputmode="numeric" placeholder="dd/mm/aaaa">
-                    </label>
-                    <label class="conditional inline-date" id="numeroSeiQualificacaoWrap">
-                      Número SEI do documento de qualificação
-                      <input name="numeroSeiQualificacao" type="text" placeholder="Número SEI">
-                    </label>
-                  </fieldset>
-                </div>
-              </section>
-
-              <section class="field-section">
                 <h3>Tipo de demanda</h3>
                 <div class="field-grid compact">
                   <fieldset class="wide">
@@ -227,11 +189,6 @@
                       <label class="conditional" id="outroErroPrimeiraDemarcacaoWrap">
                         Descrição de outros erros
                         <input name="outroErroPrimeiraDemarcacao" type="text" placeholder="Descreva">
-                      </label>
-
-                      <label class="modality-panel__full">
-                        Observações sobre os erros/documentos encontrados
-                        <textarea name="observacoesErrosDocumentos" rows="3" placeholder="Registre observações breves"></textarea>
                       </label>
 
                       <fieldset class="modality-panel__full">
@@ -564,23 +521,6 @@
               <section class="occupation-item">
                 <div class="occupation-content">
                   <fieldset>
-                    Há outras ações judiciais envolvendo a comunidade?
-                    <div class="check-grid">
-                      <label><input type="radio" name="outrasAcoesJudiciaisComunidade" value="Sim"> Sim</label>
-                      <label><input type="radio" name="outrasAcoesJudiciaisComunidade" value="Não"> Não</label>
-                    </div>
-                  </fieldset>
-
-                  <label class="conditional" id="outrasAcoesJudiciaisComunidadeWrap">
-                    Descreva
-                    <textarea name="descricaoOutrasAcoesJudiciaisComunidade" rows="3" placeholder="Descreva"></textarea>
-                  </label>
-                </div>
-              </section>
-
-              <section class="occupation-item">
-                <div class="occupation-content">
-                  <fieldset>
                     Presença de Ocupantes Não Indígenas
                     <div class="check-grid">
                       <label><input type="radio" name="ocupantesNaoIndigenas" value="Sim"> Sim</label>
@@ -619,14 +559,6 @@
                 </div>
               </section>
 
-              <section class="occupation-item">
-                <div class="occupation-content">
-                  <label>
-                    Informações adicionais
-                    <textarea name="informacoesAdicionais" rows="4" placeholder="Descreva"></textarea>
-                  </label>
-                </div>
-              </section>
             </div>
           </section>
 

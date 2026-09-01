@@ -16,7 +16,6 @@ O Formulario 2 implementa a parte `FORMULARIO PRODUTO 2` do roteiro de qualifica
 - `revisaoLimites.erroPrimeiraDemarcacao`
 - `revisaoLimites.tiposErroPrimeiraDemarcacao`
 - `revisaoLimites.outroErroPrimeiraDemarcacao`
-- `revisaoLimites.observacoesErrosDocumentos`
 - `revisaoLimites.enquadraRequisitosStf`
 - `reservaIndigena.comunidadeIndicouArea`
 - `reservaIndigena.imovelDestinacaoComunidade`
@@ -57,14 +56,22 @@ O Formulario 2 implementa a parte `FORMULARIO PRODUTO 2` do roteiro de qualifica
 - detalhes de conflito
 - `reintegracaoPosse`
 - `descricaoReintegracaoPosse`
+- `processosAnalisados`
+- `numerosProcesso`
+- `numeroSeiQualificacao`
+- `descricaoProcessosAnalisados`
+- `temRoteiro`
+- `dataRoteiro`
+- `revisaoLimites.observacoesErrosDocumentos`
+- `situacaoArea.outrasAcoesJudiciaisComunidade`
+- `situacaoArea.descricaoOutrasAcoesJudiciaisComunidade`
+- `situacaoArea.informacoesAdicionais`
 
 ## Campos reaproveitados
 
 - dados do consultor;
 - ID e nome da reivindicacao;
 - etnias e outras etnias;
-- processos analisados;
-- roteiro de qualificacao, data do roteiro e numero SEI de qualificacao;
 - UF e municipios;
 - localizacao da demanda;
 - bioma;
@@ -72,9 +79,7 @@ O Formulario 2 implementa a parte `FORMULARIO PRODUTO 2` do roteiro de qualifica
 - sobreposicoes e detalhes por tipo;
 - criterios de vulnerabilidade;
 - comunidades tradicionais;
-- povos isolados;
-- outras acoes judiciais envolvendo a comunidade;
-- informacoes adicionais.
+- povos isolados.
 
 ## SharePoint
 
