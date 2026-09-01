@@ -922,6 +922,18 @@ function updateConditionals({ renderDynamic = true } = {}) {
   updateCoordinateFormatDetails();
 
   const demandas = getCheckedValues("tipoDemanda");
+  const hasUltimoAtoRegularizacao = Boolean(getValue("ultimoAtoRegularizacao"));
+  setConditional("nomeDocumentoRegularizacaoWrap", hasUltimoAtoRegularizacao);
+  setConditional("dataDocumentoRegularizacaoWrap", hasUltimoAtoRegularizacao);
+  if (!hasUltimoAtoRegularizacao) {
+    clearFieldValue("nomeDocumentoRegularizacao");
+    clearFieldValue("dataDocumentoRegularizacao");
+  }
+
+  const hasImovelDestinacao = getValue("imovelDestinacaoComunidade") === "Sim";
+  setConditional("informacoesImovelDestinacaoWrap", hasImovelDestinacao);
+  if (!hasImovelDestinacao) clearFieldValue("informacoesImovelDestinacao");
+
   setConditional("modalidadeReservaWrap", hasDemand(demandas, "Reserva Indígena"));
   setConditional("justificativaRevisaoWrap", hasDemand(demandas, "Revisão de limites"));
   setConditional("justificativaRevisaoTextoWrap", hasDemand(demandas, "Revisão de limites") && getValue("temJustificativaRevisao") === "Sim");
@@ -1551,6 +1563,20 @@ function buildPayload(statusFormulario = "Enviado") {
     formularioJson: JSON.stringify(dadosCompletos)
   };
   return garantirTiposPayload(payload);
+}
+
+function clearFieldValue(name) {
+  const element = form?.elements[name];
+  if (!element) return;
+  const fields = element instanceof RadioNodeList ? Array.from(element) : [element];
+  fields.forEach((field) => {
+    if (field.type === "checkbox" || field.type === "radio") {
+      field.checked = false;
+      return;
+    }
+    field.value = "";
+  });
+  clearFieldError(name);
 }
 
 function garantirTiposPayload(payload) {
@@ -4730,10 +4756,21 @@ function updateConditionals({ renderDynamic = true } = {}) {
   const demandas = getCheckedValues("tipoDemanda");
   const isRevisao = hasDemand(demandas, "Revisão de limites");
   const isReserva = hasDemand(demandas, "Reserva Indígena");
+  const hasUltimoAtoRegularizacao = Boolean(getValue("ultimoAtoRegularizacao"));
+  const hasImovelDestinacao = getValue("imovelDestinacaoComunidade") === "Sim";
   setConditional("revisaoLimitesWrap", isRevisao);
   setConditional("reservaIndigenaWrap", isReserva);
+  setConditional("nomeDocumentoRegularizacaoWrap", isRevisao && hasUltimoAtoRegularizacao);
+  setConditional("dataDocumentoRegularizacaoWrap", isRevisao && hasUltimoAtoRegularizacao);
   setConditional("tiposErroPrimeiraDemarcacaoWrap", isRevisao && getValue("erroPrimeiraDemarcacao") === "Sim");
   setConditional("outroErroPrimeiraDemarcacaoWrap", isRevisao && getValue("erroPrimeiraDemarcacao") === "Sim" && getCheckedValues("tiposErroPrimeiraDemarcacao").includes("Outros"));
+  setConditional("informacoesImovelDestinacaoWrap", isReserva && hasImovelDestinacao);
+
+  if (!isRevisao || !hasUltimoAtoRegularizacao) {
+    clearFieldValue("nomeDocumentoRegularizacao");
+    clearFieldValue("dataDocumentoRegularizacao");
+  }
+  if (!isReserva || !hasImovelDestinacao) clearFieldValue("informacoesImovelDestinacao");
 
   if (renderDynamic) {
     renderAcoesJudiciaisDetalhadas();
@@ -4805,6 +4842,10 @@ function montarFormularioJson(statusFormulario = "Rascunho", now = new Date().to
   const tipoDemanda = asText(getValue("tipoDemanda"));
   const isRevisao = hasDemand([tipoDemanda], "Revisão de limites");
   const isReserva = hasDemand([tipoDemanda], "Reserva Indígena");
+  const ultimoAtoRegularizacao = asText(getValue("ultimoAtoRegularizacao"));
+  const hasUltimoAtoRegularizacao = Boolean(ultimoAtoRegularizacao);
+  const imovelDestinacaoComunidade = asText(getValue("imovelDestinacaoComunidade"));
+  const hasImovelDestinacao = imovelDestinacaoComunidade === "Sim";
   const estados = asList(getSelectedEstados());
   const municipios = asList(getSelectedMunicipios());
   const coordenadasDetalhadas = asList(getCoordenadasDetalhadas());
@@ -4838,9 +4879,9 @@ function montarFormularioJson(statusFormulario = "Rascunho", now = new Date().to
       tipoDemanda,
       revisaoLimites: isRevisao ? {
         nomeTiOriginal: asText(getValue("nomeTiOriginal")),
-        ultimoAtoRegularizacao: asText(getValue("ultimoAtoRegularizacao")),
-        nomeDocumentoRegularizacao: asText(getValue("nomeDocumentoRegularizacao")),
-        dataDocumentoRegularizacao: prepararDataParaPayload(getValue("dataDocumentoRegularizacao")),
+        ultimoAtoRegularizacao,
+        nomeDocumentoRegularizacao: hasUltimoAtoRegularizacao ? asText(getValue("nomeDocumentoRegularizacao")) : "",
+        dataDocumentoRegularizacao: hasUltimoAtoRegularizacao ? prepararDataParaPayload(getValue("dataDocumentoRegularizacao")) : "",
         dataPrimeiraMencaoReivindicacao: prepararDataParaPayload(getValue("dataPrimeiraMencaoReivindicacao")),
         areaPrazoDecadencial: asText(getValue("areaPrazoDecadencial")),
         erroPrimeiraDemarcacao: asText(getValue("erroPrimeiraDemarcacao")),
@@ -4850,8 +4891,8 @@ function montarFormularioJson(statusFormulario = "Rascunho", now = new Date().to
       } : {},
       reservaIndigena: isReserva ? {
         comunidadeIndicouArea: asText(getValue("comunidadeIndicouArea")),
-        imovelDestinacaoComunidade: asText(getValue("imovelDestinacaoComunidade")),
-        informacoesImovelDestinacao: asText(getValue("informacoesImovelDestinacao"))
+        imovelDestinacaoComunidade,
+        informacoesImovelDestinacao: hasImovelDestinacao ? asText(getValue("informacoesImovelDestinacao")) : ""
       } : {}
     },
     caracterizacaoArea: {
