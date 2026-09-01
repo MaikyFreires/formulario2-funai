@@ -1,8 +1,10 @@
-const POWER_AUTOMATE_URL = window.APP_CONFIG.POWER_AUTOMATE_URL;
-const VERIFY_ACCESS_URL = window.APP_CONFIG.VERIFY_ACCESS_URL;
-const LIST_DRAFTS_URL = window.APP_CONFIG.LIST_DRAFTS_URL;
-const LOAD_DRAFT_URL = window.APP_CONFIG.LOAD_DRAFT_URL || "";
-const LIST_SENT_URL = window.APP_CONFIG.LIST_SENT_URL || "";
+const APP_CONFIG = window.APP_CONFIG || {};
+const FORMULARIO2_CONFIG = window.FORMULARIO2_CONFIG || {};
+const POWER_AUTOMATE_URL = FORMULARIO2_CONFIG.receberFormulario || FORMULARIO2_CONFIG.RECEBER_FORMULARIO_2_URL || "";
+const VERIFY_ACCESS_URL = APP_CONFIG.VERIFY_ACCESS_URL || "";
+const LIST_DRAFTS_URL = FORMULARIO2_CONFIG.listarRascunhos || FORMULARIO2_CONFIG.LISTAR_RASCUNHOS_FORMULARIO_2_URL || "";
+const LOAD_DRAFT_URL = FORMULARIO2_CONFIG.carregarRascunho || FORMULARIO2_CONFIG.CARREGAR_RASCUNHO_FORMULARIO_2_URL || "";
+const LIST_SENT_URL = FORMULARIO2_CONFIG.listarEnviados || FORMULARIO2_CONFIG.LISTAR_ENVIADOS_FORMULARIO_2_URL || "";
 const SECRET_TOKEN = "FUNAI_FORM_SECRET_2026";
 const AUTHORIZED_EMAIL_KEY = "consultorEmailAutorizado";
 const ACCESS_SESSION_KEY = "consultorSessaoAtiva";
@@ -1858,7 +1860,7 @@ async function salvarFormulario(statusFormulario = "Rascunho", options = {}) {
       setAutosaveStatus("Autosave não configurado.", "error");
       return false;
     }
-    showMessage("Configure POWER_AUTOMATE_URL no arquivo js/config.js antes de salvar.", "error");
+    showMessage("Configure receberFormulario no arquivo js/config.local.js antes de salvar.", "error");
     return false;
   }
 
@@ -1894,8 +1896,6 @@ async function salvarFormulario(statusFormulario = "Rascunho", options = {}) {
   }
 
   console.log(isUpdate ? "modo update" : "modo create");
-  console.log("payload enviado", payloadPowerAutomate);
-  console.log("payload normalizado", payloadPowerAutomate);
   console.log("TIPOS DO PAYLOAD", {
     formularioJson: typeof payloadPowerAutomate.formularioJson,
     consultor: typeof payloadPowerAutomate.consultor,
@@ -1904,33 +1904,6 @@ async function salvarFormulario(statusFormulario = "Rascunho", options = {}) {
     tipoDemandaEhArray: Array.isArray(payloadPowerAutomate.reivindicacao?.tipoDemanda),
     mapasEhArray: Array.isArray(payloadPowerAutomate.caracterizacaoArea?.mapasCartograficos)
   });
-  console.log("DEBUG TIPOS COMPLETO", {
-    formularioJson: typeof payloadPowerAutomate.formularioJson,
-
-    consultor: typeof payloadPowerAutomate.consultor,
-    reivindicacao: typeof payloadPowerAutomate.reivindicacao,
-    resumoProcesso: typeof payloadPowerAutomate.resumoProcesso,
-    statusProcesso: typeof payloadPowerAutomate.statusProcesso,
-    caracterizacaoArea: typeof payloadPowerAutomate.caracterizacaoArea,
-    ocupacaoIndigena: typeof payloadPowerAutomate.ocupacaoIndigena,
-
-    documentosEhArray: Array.isArray(payloadPowerAutomate.resumoProcesso?.documentos),
-    coordenadasEhArray: Array.isArray(payloadPowerAutomate.caracterizacaoArea?.coordenadas),
-    coordenadasDetalhadasEhArray: Array.isArray(payloadPowerAutomate.caracterizacaoArea?.coordenadasDetalhadas),
-    mapasCartograficosEhArray: Array.isArray(payloadPowerAutomate.caracterizacaoArea?.mapasCartograficos),
-    detalhesVulnerabilidadesEhArray: Array.isArray(payloadPowerAutomate.ocupacaoIndigena?.detalhesVulnerabilidades),
-    detalhesComunidadesEhArray: Array.isArray(payloadPowerAutomate.ocupacaoIndigena?.detalhesComunidadesTradicionais),
-
-    detalhesDecisao: {
-      tipo: typeof payloadPowerAutomate.statusProcesso?.detalhesDecisao,
-      valor: payloadPowerAutomate.statusProcesso?.detalhesDecisao
-    },
-    motivacaoJudicializacao: {
-      tipo: typeof payloadPowerAutomate.statusProcesso?.motivacaoJudicializacao,
-      valor: payloadPowerAutomate.statusProcesso?.motivacaoJudicializacao
-    }
-  });
-
   if (!automatico) {
     saveDraftBtn.disabled = true;
     submitBtn.disabled = true;
@@ -1938,16 +1911,6 @@ async function salvarFormulario(statusFormulario = "Rascunho", options = {}) {
   }
 
   try {
-    const formularioJsonEnviado = converterJsonSerializadoEmObjeto(payloadPowerAutomate.formularioJson) || {};
-    console.log("payload enviado", payloadPowerAutomate);
-
-    console.log("FormularioJson analisado", formularioJsonEnviado);
-
-    console.log(
-      "mapasCartograficos",
-      formularioJsonEnviado.caracterizacaoArea?.mapasCartograficos
-    );
-
     const response = await fetch(POWER_AUTOMATE_URL, {
       method: "POST",
       headers: {
@@ -1958,6 +1921,9 @@ async function salvarFormulario(statusFormulario = "Rascunho", options = {}) {
     console.log(response.status, response.statusText);
 
     if (response.ok) {
+      const data = await readJsonIfAvailable(response);
+      if (data?.success === false) throw new Error("Fluxo retornou success=false.");
+
       activePersistenceMode = "update";
       sessionStorage.setItem(ACTIVE_FORM_ID_KEY, payloadPowerAutomate.formularioId);
 
@@ -2357,7 +2323,7 @@ async function listarRelatorios({ title, url, emptyMessage, mode = "draft", emai
   showReportList(title, "Carregando...");
 
   if (!url) {
-    showReportListMessage("Configure a URL correspondente no arquivo js/config.js.", "error");
+    showReportListMessage("Configure a URL correspondente no arquivo js/config.local.js.", "error");
     return;
   }
 
@@ -2378,7 +2344,10 @@ async function listarRelatorios({ title, url, emptyMessage, mode = "draft", emai
     if (!response.ok) throw new Error(`Falha ao listar relatórios: ${response.status}`);
 
     const data = await readJsonIfAvailable(response);
+    if (data?.success === false) throw new Error("Fluxo retornou success=false.");
+
     const relatorios = normalizarListaRelatorios(data);
+    if (!relatorios) throw new Error("Resposta sem lista de itens.");
     renderReportList(relatorios, emptyMessage);
   } catch (error) {
     showReportListMessage("Não foi possível carregar a lista.", "error");
@@ -2415,7 +2384,7 @@ async function carregarFormulario(formularioId, mode = "draft") {
   }
 
   if (!LOAD_DRAFT_URL) {
-    showReportListMessage("Configure LOAD_DRAFT_URL no arquivo js/config.js.", "error");
+    showReportListMessage("Configure carregarRascunho no arquivo js/config.local.js.", "error");
     return;
   }
 
@@ -2442,9 +2411,11 @@ async function carregarFormulario(formularioId, mode = "draft") {
     if (!response.ok) throw new Error(`Falha ao carregar relatório: ${response.status}`);
 
     const data = await readJsonIfAvailable(response);
-    console.log("rascunho carregado", data);
     const relatorio = normalizarRascunhoCarregado(data, resumo);
-    console.log(mode === "sent" ? "relatório enviado carregado" : "rascunho carregado", relatorio);
+    if (!relatorio) {
+      showReportListMessage(mode === "sent" ? "Relatório enviado não encontrado." : "Rascunho não encontrado.", "error");
+      return;
+    }
 
     if (!relatorioCorrespondeAoResumo(relatorio, resumo)) {
       const loadedReivindicacaoId = getReportReivindicacaoId(relatorio) || "sem ID";
@@ -2475,9 +2446,10 @@ async function abrirRelatorioSelecionado(relatorio, fallbackFormularioId, mode =
 
 function normalizarRascunhoCarregado(data, fallback) {
   if (Array.isArray(data)) return data[0] || fallback;
+  if (data?.success === false) throw new Error("Fluxo retornou success=false.");
+  if (data && Object.prototype.hasOwnProperty.call(data, "item")) return data.item;
   if (data?.relatorio) return data.relatorio;
   if (data?.rascunho) return data.rascunho;
-  if (data?.item) return data.item;
   if (Array.isArray(data?.value)) return data.value[0] || fallback;
   if (data?.value && !Array.isArray(data.value)) return data.value;
   return data || fallback;
@@ -2581,10 +2553,11 @@ function showDashboardMessage(text, type) {
 
 function normalizarListaRelatorios(data) {
   if (Array.isArray(data)) return data;
+  if (data?.success === false) throw new Error("Fluxo retornou success=false.");
   if (Array.isArray(data?.relatorios)) return data.relatorios;
   if (Array.isArray(data?.items)) return data.items;
   if (Array.isArray(data?.value)) return data.value;
-  return [];
+  return null;
 }
 
 function renderReportList(relatorios, emptyMessage) {
@@ -2686,7 +2659,7 @@ async function carregarRelatorioCompletoDaLista(resumo, formularioId, mode = "dr
   if (extrairFormularioJson(resumo)) return resumo;
 
   if (!LOAD_DRAFT_URL) {
-    throw new Error("LOAD_DRAFT_URL n\u00e3o configurada.");
+    throw new Error("carregarRascunho n\u00e3o configurado.");
   }
 
   const response = await fetch(LOAD_DRAFT_URL, {
@@ -2710,6 +2683,9 @@ async function carregarRelatorioCompletoDaLista(resumo, formularioId, mode = "dr
 
   const data = await readJsonIfAvailable(response);
   const relatorio = normalizarRascunhoCarregado(data, resumo);
+  if (!relatorio) {
+    throw new Error(mode === "sent" ? "Relatório enviado não encontrado." : "Rascunho não encontrado.");
+  }
 
   if (!relatorioCorrespondeAoResumo(relatorio, resumo)) {
     throw new Error(`Relat\u00f3rio carregado n\u00e3o corresponde ao rascunho selecionado (${mode}).`);
@@ -5136,7 +5112,7 @@ function prepararImpressaoPdf(dadosOrigem = null) {
       pdfRadio("Existe imóvel passível de destinação?", dados.reivindicacao?.reservaIndigena?.imovelDestinacaoComunidade, ["Sim", "Não"]),
       pdfField("Informações sobre imóvel/destinação", dados.reivindicacao?.reservaIndigena?.informacoesImovelDestinacao)
     ]),
-    criarPdfSecao("5. Caracterização da área reivindicada", [
+    criarPdfSecao("3. Caracterização da área reivindicada", [
       pdfField("Estado", asList(dados.caracterizacaoArea?.estados).join(", ") || dados.caracterizacaoArea?.estado),
       pdfField("Município", asList(dados.caracterizacaoArea?.municipios).join(", ") || dados.caracterizacaoArea?.municipio),
       pdfField("Localização da demanda", dados.caracterizacaoArea?.localizacaoDemanda),
@@ -5151,7 +5127,7 @@ function prepararImpressaoPdf(dadosOrigem = null) {
       pdfRadio("Sobreposições", dados.caracterizacaoArea?.sobreposicoes, ["Sim", "Não"]),
       pdfField("Tipos de sobreposição", asList(dados.caracterizacaoArea?.tiposSobreposicao).join(", "))
     ]),
-    criarPdfSecao("6. Situação da área reivindicada", [
+    criarPdfSecao("4. Situação da área reivindicada", [
       pdfRadio("Indígenas estão na área reivindicada?", dados.situacaoArea?.indigenasArea, ["Sim", "Não"]),
       pdfField("Situação de posse", dados.situacaoArea?.situacaoPosse),
       pdfField("Critérios de vulnerabilidade", asList(dados.situacaoArea?.vulnerabilidades).join(", ")),
@@ -5164,7 +5140,7 @@ function prepararImpressaoPdf(dadosOrigem = null) {
       pdfField("Outro ocupante", dados.situacaoArea?.outroOcupanteNaoIndigena),
       pdfField("Nível de Tensão Local", dados.situacaoArea?.nivelTensaoLocal)
     ]),
-    criarPdfSecao("7. Encaminhamentos e recomendações", [
+    criarPdfSecao("5. Encaminhamentos e recomendações", [
       pdfRadio("Reivindicação permanece ativa e atual?", dados.encaminhamentos?.reivindicacaoAtivaAtual, ["Sim", "Não"]),
       pdfRadio("Relação com outras reivindicações?", dados.encaminhamentos?.relacaoOutrasReivindicacoes, ["Sim", "Não"]),
       pdfField("IDs relacionados", asList(dados.encaminhamentos?.idsReivindicacoesRelacionadas).join(", ")),

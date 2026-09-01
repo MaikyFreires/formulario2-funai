@@ -5,3 +5,10 @@ window.APP_CONFIG = {
   LOAD_DRAFT_URL: "",
   LIST_SENT_URL: ""
 };
+
+window.FORMULARIO2_CONFIG = {
+  receberFormulario: "",
+  listarEnviados: "",
+  listarRascunhos: "",
+  carregarRascunho: ""
+};
