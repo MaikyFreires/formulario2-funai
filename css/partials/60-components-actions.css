@@ -41,8 +41,7 @@ fieldset.conditional.is-visible {
 }
 
 section.conditional.modality-panel.is-visible {
-  display: grid;
-  grid-template-columns: 1fr;
+  display: block !important;
   align-items: start;
 }
 
