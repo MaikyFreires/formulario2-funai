@@ -1567,12 +1567,7 @@ async function handleSubmit(event) {
 
 function buildPayload(statusFormulario = "Enviado") {
   const now = new Date().toISOString();
-  const dadosCompletos = montarFormularioJson(statusFormulario, now);
-  const payload = {
-    ...dadosCompletos,
-    formularioJson: JSON.stringify(dadosCompletos)
-  };
-  return garantirTiposPayload(payload);
+  return garantirTiposPayload(montarFormularioJson(statusFormulario, now));
 }
 
 function clearFieldValue(name) {
@@ -1623,9 +1618,7 @@ function garantirArray(valor) {
 }
 
 function validarFormularioJsonAntesDoEnvio(payload) {
-  const formularioJsonTexto = typeof payload?.formularioJson === "string"
-    ? asText(payload.formularioJson)
-    : JSON.stringify(payload?.formularioJson || {});
+  const formularioJsonTexto = JSON.stringify(payload || {});
   let formularioJson = {};
   let parseError = null;
 
@@ -4371,7 +4364,7 @@ function setCoordenadaRowValues(row, coordenada) {
   if (row.querySelector("[name='latitudeDirecao']")) row.querySelector("[name='latitudeDirecao']").value = asText(coordenada.latitudeDirecao);
   row.querySelector("[name='longitude']").value = asText(coordenada.longitude);
   if (row.querySelector("[name='longitudeDirecao']")) row.querySelector("[name='longitudeDirecao']").value = asText(coordenada.longitudeDirecao);
-  row.querySelector("[name='coordenadaSedeMunicipio']").value = asText(coordenada.coordenadaSedeMunicipio);
+  row.querySelector("[name='coordenadaSedeMunicipio']").value = asText(coordenada.coordenadaSedeMunicipio || coordenada.sedeMunicipio);
   row.querySelector("[name='comentarioCoordenada']").value = asText(coordenada.comentarioCoordenada || coordenada.comentario);
   updateCoordinateFormatDetails(row);
 }
@@ -4394,9 +4387,8 @@ function getCoordenadasDetalhadas() {
 function getCoordenadasGeograficas() {
   return getCoordenadasDetalhadas().map((coordenada) => ({
     latitude: asText(coordenada.latitude),
-    latitudeDirecao: asText(coordenada.latitudeDirecao),
     longitude: asText(coordenada.longitude),
-    longitudeDirecao: asText(coordenada.longitudeDirecao),
+    sedeMunicipio: asText(coordenada.coordenadaSedeMunicipio),
     comentario: asText(coordenada.comentarioCoordenada)
   }));
 }
@@ -4799,9 +4791,7 @@ function montarFormularioJson(statusFormulario = "Rascunho", now = new Date().to
   const hasImovelDestinacao = imovelDestinacaoComunidade === "Sim";
   const estados = asList(getSelectedEstados());
   const municipios = asList(getSelectedMunicipios());
-  const coordenadasDetalhadas = asList(getCoordenadasDetalhadas());
   const coordenadas = asList(getCoordenadasGeograficas());
-  const primeiraCoordenada = coordenadasDetalhadas[0] || {};
   const tiposSobreposicao = getValue("sobreposicoes") === "Sim" ? asList(getCheckedValues("tiposSobreposicao")) : [];
   const tiposErro = isRevisao && getValue("erroPrimeiraDemarcacao") === "Sim" ? asList(getCheckedValues("tiposErroPrimeiraDemarcacao")) : [];
   const tiposOcupantes = getValue("ocupantesNaoIndigenas") === "Sim" ? asList(getCheckedValues("tiposOcupantesNaoIndigenas")) : [];
@@ -4809,11 +4799,10 @@ function montarFormularioJson(statusFormulario = "Rascunho", now = new Date().to
 
   return {
     formularioId: asText(getCurrentFormularioId()),
-    tokenSecreto: asText(SECRET_TOKEN),
     statusFormulario: asText(statusFormulario),
     atualizadoEm: asText(now),
     enviadoEm: statusFormulario === "Enviado" ? asText(now) : "",
-    origem: "github-pages-funai",
+    origem: "github-pages-funai-produto2",
     produto: "Produto 2",
     etapaAtual: currentStep,
     consultor: {
@@ -4826,7 +4815,6 @@ function montarFormularioJson(statusFormulario = "Rascunho", now = new Date().to
       nome: asText(getValue("nomeReivindicacao")),
       etnias: asList(getSelectedEtnias()),
       outraEtnia: asText(getSelectedOutrasEtnias().join(", ")),
-      outrasEtnias: asList(getSelectedOutrasEtnias()),
       tipoDemanda,
       revisaoLimites: isRevisao ? {
         nomeTiOriginal: asText(getValue("nomeTiOriginal")),
@@ -4847,21 +4835,10 @@ function montarFormularioJson(statusFormulario = "Rascunho", now = new Date().to
       } : {}
     },
     caracterizacaoArea: {
-      estado: asText(estados.join(", ")),
       estados,
-      municipio: asText(municipios.join(", ")),
       municipios,
       localizacaoDemanda: asText(getValue("localizacaoDemanda")),
       coordenadas,
-      coordenadasDetalhadas,
-      latitude: asText(primeiraCoordenada.latitude),
-      tipoCoordenada: asText(primeiraCoordenada.tipoCoordenada),
-      outroFormatoCoordenada: asText(primeiraCoordenada.outroFormatoCoordenada),
-      latitudeDirecao: asText(primeiraCoordenada.latitudeDirecao),
-      longitude: asText(primeiraCoordenada.longitude),
-      longitudeDirecao: asText(primeiraCoordenada.longitudeDirecao),
-      coordenadaSedeMunicipio: asText(primeiraCoordenada.coordenadaSedeMunicipio),
-      comentarioCoordenada: asText(primeiraCoordenada.comentarioCoordenada),
       bioma: asList(getCheckedValues("bioma")),
       faixaFronteira: asText(getValue("faixaFronteira")),
       sobreposicoes: asText(getValue("sobreposicoes")),
@@ -4904,7 +4881,6 @@ function montarFormularioJson(statusFormulario = "Rascunho", now = new Date().to
 function garantirTiposPayload(payload) {
   const normalizado = {
     ...payload,
-    formularioJson: normalizarTextoParaPowerAutomate(payload.formularioJson),
     consultor: garantirObjeto(payload.consultor),
     reivindicacao: garantirObjeto(payload.reivindicacao),
     caracterizacaoArea: garantirObjeto(payload.caracterizacaoArea),
@@ -4913,14 +4889,12 @@ function garantirTiposPayload(payload) {
   };
 
   normalizado.reivindicacao.etnias = garantirArray(normalizado.reivindicacao.etnias);
-  normalizado.reivindicacao.outrasEtnias = garantirArray(normalizado.reivindicacao.outrasEtnias);
   normalizado.reivindicacao.revisaoLimites = garantirObjeto(normalizado.reivindicacao.revisaoLimites);
   normalizado.reivindicacao.revisaoLimites.tiposErroPrimeiraDemarcacao = garantirArray(normalizado.reivindicacao.revisaoLimites.tiposErroPrimeiraDemarcacao);
   normalizado.reivindicacao.reservaIndigena = garantirObjeto(normalizado.reivindicacao.reservaIndigena);
   normalizado.caracterizacaoArea.estados = garantirArray(normalizado.caracterizacaoArea.estados);
   normalizado.caracterizacaoArea.municipios = garantirArray(normalizado.caracterizacaoArea.municipios);
   normalizado.caracterizacaoArea.coordenadas = garantirArray(normalizado.caracterizacaoArea.coordenadas);
-  normalizado.caracterizacaoArea.coordenadasDetalhadas = garantirArray(normalizado.caracterizacaoArea.coordenadasDetalhadas);
   normalizado.caracterizacaoArea.bioma = garantirArray(normalizado.caracterizacaoArea.bioma);
   normalizado.caracterizacaoArea.tiposSobreposicao = garantirArray(normalizado.caracterizacaoArea.tiposSobreposicao);
   normalizado.situacaoArea.vulnerabilidades = garantirArray(normalizado.situacaoArea.vulnerabilidades);
@@ -4928,46 +4902,47 @@ function garantirTiposPayload(payload) {
   normalizado.situacaoArea.tiposOcupantesNaoIndigenas = garantirArray(normalizado.situacaoArea.tiposOcupantesNaoIndigenas);
   normalizado.encaminhamentos.idsReivindicacoesRelacionadas = garantirArray(normalizado.encaminhamentos.idsReivindicacoesRelacionadas);
 
-  normalizado.ocupacaoIndigena = normalizado.situacaoArea;
-  normalizado.resumoProcesso = {};
-  normalizado.statusProcesso = {};
-
   return normalizado;
 }
 
 function normalizarPayloadParaPowerAutomate(payload) {
-  const normalizado = garantirTiposPayload(payload);
-  normalizado.formularioJson = JSON.stringify({
-    ...converterJsonSerializadoEmObjeto(normalizado.formularioJson),
-    consultor: normalizado.consultor,
-    reivindicacao: normalizado.reivindicacao,
-    caracterizacaoArea: normalizado.caracterizacaoArea,
-    situacaoArea: normalizado.situacaoArea,
-    encaminhamentos: normalizado.encaminhamentos,
-    resumoProcesso: undefined,
-    statusProcesso: undefined,
-    ocupacaoIndigena: undefined
-  }, (_key, value) => value === undefined ? undefined : value);
-  return normalizado;
+  return garantirTiposPayload(payload);
 }
 
 function prepararPayloadPowerAutomate(payload) {
+  const {
+    tokenSecreto,
+    formularioJson,
+    ocupacaoIndigena,
+    resumoProcesso,
+    statusProcesso,
+    ...payloadAtual
+  } = payload;
+  const { outrasEtnias, ...reivindicacaoAtual } = garantirObjeto(payloadAtual.reivindicacao);
+  const {
+    estado,
+    municipio,
+    coordenadasDetalhadas,
+    latitude,
+    longitude,
+    latitudeDirecao,
+    longitudeDirecao,
+    tipoCoordenada,
+    outroFormatoCoordenada,
+    coordenadaSedeMunicipio,
+    comentarioCoordenada,
+    ...caracterizacaoAtual
+  } = garantirObjeto(payloadAtual.caracterizacaoArea);
   const payloadNormalizado = converterJsonSerializadoEmObjeto({
-    ...payload,
-    formularioJson: converterJsonSerializadoEmObjeto(payload.formularioJson),
-    dados: converterJsonSerializadoEmObjeto(payload.dados),
-    payload: converterJsonSerializadoEmObjeto(payload.payload),
+    ...payloadAtual,
     consultor: converterJsonSerializadoEmObjeto(payload.consultor),
-    reivindicacao: converterJsonSerializadoEmObjeto(payload.reivindicacao),
-    caracterizacaoArea: converterJsonSerializadoEmObjeto(payload.caracterizacaoArea),
+    reivindicacao: converterJsonSerializadoEmObjeto(reivindicacaoAtual),
+    caracterizacaoArea: converterJsonSerializadoEmObjeto(caracterizacaoAtual),
     situacaoArea: converterJsonSerializadoEmObjeto(payload.situacaoArea),
     encaminhamentos: converterJsonSerializadoEmObjeto(payload.encaminhamentos)
   });
 
-  return {
-    ...payloadNormalizado,
-    formularioJson: serializarFormularioJsonParaPowerAutomate(payloadNormalizado.formularioJson)
-  };
+  return payloadNormalizado;
 }
 
 function flattenDraft(draft) {
@@ -4975,7 +4950,7 @@ function flattenDraft(draft) {
   const revisao = reivindicacao.revisaoLimites || {};
   const reserva = reivindicacao.reservaIndigena || {};
   const caracterizacao = draft.caracterizacaoArea || {};
-  const situacao = draft.situacaoArea || draft.ocupacaoIndigena || {};
+  const situacao = draft.situacaoArea || {};
   const encaminhamentos = draft.encaminhamentos || {};
   return {
     consultorEmail: pickField(draft, directValue(() => draft.consultor?.email), "ConsultorEmail", "consultorEmail"),
@@ -4985,7 +4960,7 @@ function flattenDraft(draft) {
     nomeReivindicacao: pickField(draft, directValue(() => reivindicacao.nome), "NomeReivindicacao", "field_3", "nomeReivindicacao"),
     etnias: asListOrSplit(reivindicacao.etnias || draft.Etnias || draft.etnias),
     outraEtnia: reivindicacao.outraEtnia,
-    outrasEtnias: asListOrSplit(reivindicacao.outrasEtnias || reivindicacao.outraEtnia),
+    outrasEtnias: asListOrSplit(reivindicacao.outraEtnia || reivindicacao.outrasEtnias),
     tipoDemanda: asListOrSplit(reivindicacao.tipoDemanda)[0] || asText(reivindicacao.tipoDemanda),
     nomeTiOriginal: revisao.nomeTiOriginal,
     ultimoAtoRegularizacao: revisao.ultimoAtoRegularizacao,
@@ -5003,7 +4978,7 @@ function flattenDraft(draft) {
     estados: asListOrSplit(caracterizacao.estados || caracterizacao.estado || draft.Estados || draft.estados),
     municipios: asListOrSplit(caracterizacao.municipios || caracterizacao.municipio || draft.Municipios || draft.municipios),
     localizacaoDemanda: caracterizacao.localizacaoDemanda,
-    coordenadas: normalizeCoordenadas(caracterizacao.coordenadasDetalhadas || caracterizacao.coordenadas || draft.Coordenadas || draft.coordenadas),
+    coordenadas: normalizeCoordenadas(caracterizacao.coordenadas || caracterizacao.coordenadasDetalhadas || draft.Coordenadas || draft.coordenadas),
     tipoCoordenada: caracterizacao.tipoCoordenada,
     outroFormatoCoordenada: caracterizacao.outroFormatoCoordenada,
     latitude: caracterizacao.latitude,
@@ -5067,7 +5042,7 @@ function prepararImpressaoPdf(dadosOrigem = null) {
       pdfField("ID", dados.reivindicacao?.id),
       pdfField("Nome da reivindicação", dados.reivindicacao?.nome),
       pdfField("Etnias", asList(dados.reivindicacao?.etnias).join(", ")),
-      pdfField("Outras etnias", asList(dados.reivindicacao?.outrasEtnias).join(", ")),
+      pdfField("Outras etnias", dados.reivindicacao?.outraEtnia),
       pdfField("Tipo da demanda", dados.reivindicacao?.tipoDemanda)
     ]),
     criarPdfSecao("2.1 Revisão de limites", [
@@ -5091,11 +5066,11 @@ function prepararImpressaoPdf(dadosOrigem = null) {
       pdfField("Estado", asList(dados.caracterizacaoArea?.estados).join(", ") || dados.caracterizacaoArea?.estado),
       pdfField("Município", asList(dados.caracterizacaoArea?.municipios).join(", ") || dados.caracterizacaoArea?.municipio),
       pdfField("Localização da demanda", dados.caracterizacaoArea?.localizacaoDemanda),
-      pdfTabela("Coordenadas", ["Latitude", "Longitude", "Sede do município?", "Comentário"], asList(dados.caracterizacaoArea?.coordenadasDetalhadas).map((item) => [
+      pdfTabela("Coordenadas", ["Latitude", "Longitude", "Sede do município?", "Comentário"], asList(dados.caracterizacaoArea?.coordenadas).map((item) => [
         item.latitude,
         item.longitude,
-        item.coordenadaSedeMunicipio,
-        item.comentarioCoordenada
+        item.sedeMunicipio,
+        item.comentario
       ])),
       pdfField("Bioma", asList(dados.caracterizacaoArea?.bioma).join(", ")),
       pdfRadio("Faixa de Fronteira", dados.caracterizacaoArea?.faixaFronteira, ["Sim", "Não"]),
@@ -5130,8 +5105,7 @@ function prepararImpressaoPdf(dadosOrigem = null) {
 
 function normalizarDadosParaPdf(dadosOrigem) {
   if (!dadosOrigem) {
-    const payload = normalizarPayloadParaPowerAutomate(buildPayload("Enviado"));
-    return typeof payload.formularioJson === "string" ? JSON.parse(payload.formularioJson) : payload.formularioJson;
+    return normalizarPayloadParaPowerAutomate(buildPayload("Enviado"));
   }
 
   const dadosConvertidos = converterJsonSerializadoEmObjeto(dadosOrigem);
