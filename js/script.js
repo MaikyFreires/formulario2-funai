@@ -4693,6 +4693,8 @@ function updateConditionals({ renderDynamic = true } = {}) {
   setConditional("povosIsoladosWrap", getValue("povosIsolados") === "Sim");
   setConditional("tiposOcupantesNaoIndigenasWrap", getValue("ocupantesNaoIndigenas") === "Sim");
   setConditional("outroOcupanteNaoIndigenaWrap", getValue("ocupantesNaoIndigenas") === "Sim" && getCheckedValues("tiposOcupantesNaoIndigenas").includes("Outros"));
+  const hasOutraVulnerabilidade = getCheckedValues("vulnerabilidades").includes("Outros");
+  setConditional("outraVulnerabilidadeWrap", hasOutraVulnerabilidade);
   setConditional("idsReivindicacoesRelacionadasWrap", getValue("relacaoOutrasReivindicacoes") === "Sim");
   setConditional("descricaoRelacaoReivindicacoesWrap", getValue("relacaoOutrasReivindicacoes") === "Sim");
 
@@ -4714,6 +4716,7 @@ function updateConditionals({ renderDynamic = true } = {}) {
     clearFieldValue("dataDocumentoRegularizacao");
   }
   if (!isReserva || !hasImovelDestinacao) clearFieldValue("informacoesImovelDestinacao");
+  if (!hasOutraVulnerabilidade) clearFieldValue("outraVulnerabilidade");
 
   if (renderDynamic) {
     renderAcoesJudiciaisDetalhadas();
@@ -4754,6 +4757,7 @@ function validateRequiredFields(isDraftSave = false) {
     { fieldId: "indigenasArea", label: "Indígenas estão na área reivindicada", isValid: () => hasChecked("indigenasArea") },
     { fieldId: "situacaoPosse", label: "Situação de posse", isValid: () => getValue("indigenasArea") !== "Sim" || hasChecked("situacaoPosse") },
     { fieldId: "vulnerabilidades", label: "Critério de vulnerabilidade", isValid: () => getCheckedValues("vulnerabilidades").length > 0 },
+    { fieldId: "outraVulnerabilidade", label: "Outro critério de vulnerabilidade", isValid: () => !getCheckedValues("vulnerabilidades").includes("Outros") || hasValue("outraVulnerabilidade") },
     { fieldId: "comunidadesTradicionais", label: "Comunidades tradicionais", isValid: () => hasChecked("comunidadesTradicionais") },
     { fieldId: "descricaoComunidadeTradicional", label: "Outra comunidade tradicional", isValid: () => !selectedComunidadesTradicionais.includes("Outros") || hasValue("descricaoComunidadeTradicional") },
     { fieldId: "povosIsolados", label: "Povos isolados", isValid: () => hasChecked("povosIsolados") },
@@ -4859,6 +4863,7 @@ function montarFormularioJson(statusFormulario = "Rascunho", now = new Date().to
       indigenasArea: asText(getValue("indigenasArea")),
       situacaoPosse: getValue("indigenasArea") === "Sim" ? asText(getValue("situacaoPosse")) : "",
       vulnerabilidades: asList(getCheckedValues("vulnerabilidades")),
+      outraVulnerabilidade: getCheckedValues("vulnerabilidades").includes("Outros") ? asText(getValue("outraVulnerabilidade")) : "",
       comunidadesTradicionais: asText(getValue("comunidadesTradicionais")),
       tiposComunidadeTradicional: getValue("comunidadesTradicionais") === "Sim" ? asList(getSelectedComunidadesTradicionais()) : [],
       descricaoComunidadeTradicional: selectedComunidadesTradicionais.includes("Outros") ? asText(getValue("descricaoComunidadeTradicional")) : "",
@@ -5005,6 +5010,7 @@ function flattenDraft(draft) {
     indigenasArea: situacao.indigenasArea,
     situacaoPosse: situacao.situacaoPosse,
     vulnerabilidades: situacao.vulnerabilidades,
+    outraVulnerabilidade: situacao.outraVulnerabilidade || situacao.outroCriterioVulnerabilidade,
     comunidadesTradicionais: situacao.comunidadesTradicionais,
     tiposComunidadeTradicional: asListOrSplit(situacao.tiposComunidadeTradicional),
     descricaoComunidadeTradicional: situacao.descricaoComunidadeTradicional,
