@@ -2205,7 +2205,8 @@ function criarResumoPdf(dados) {
 }
 
 function pdfField(label, value) {
-  const text = textoRelatorio(value);
+  const optionLabels = ["Área de estudo", "Tipo da demanda", "Tipos de erro", "Bioma", "Tipos de sobreposição", "Tipos de ocupantes", "Nível de tensão local"];
+  const text = optionLabels.includes(label) ? textoRelatorio(value) : asText(value);
   if (!text) return null;
   const row = el("div", text.length > 95 ? "pdf-field pdf-field-long" : "pdf-field");
   row.append(el("strong", "", textoRelatorio(label)), el("span", "", text));
@@ -4700,8 +4701,12 @@ function updateConditionals({ renderDynamic = true } = {}) {
   setConditional("outroOcupanteNaoIndigenaWrap", getValue("ocupantesNaoIndigenas") === "Sim" && getCheckedValues("tiposOcupantesNaoIndigenas").includes("Outros"));
   setConditional("descricaoEmpreendimentoWrap", getValue("temEmpreendimento") === "Sim");
   setConditional("motivoInatividadeWrap", getValue("reivindicacaoAtivaAtual") === "Não");
+  setConditional("justificativaAtivaAtualWrap", getValue("reivindicacaoAtivaAtual") === "Não");
   setConditional("desmembramentoWrap", getValue("necessitaDesmembramento") === "Sim");
   setConditional("idsReivindicacoesRelacionadasWrap", getValue("relacaoOutrasReivindicacoes") === "Sim");
+
+  if (getValue("relacaoOutrasReivindicacoes") === "Sim" && !getAgrupamentos().length) addAgrupamento();
+  syncAgrupamentoButtons();
 
   const demandas = getCheckedValues("tipoDemanda");
   const isRevisao = hasDemand(demandas, "Revisão de limites");
@@ -4911,7 +4916,7 @@ function montarFormularioJson(statusFormulario = "Rascunho", now = new Date().to
       relacaoOutrasReivindicacoes: asText(getValue("relacaoOutrasReivindicacoes")),
       agrupamentos: temRelacao ? getAgrupamentos() : [],
       motivoInatividade: getValue("reivindicacaoAtivaAtual") === "Não" ? asText(getValue("motivoInatividade")) : "",
-      justificativaAtivaAtual: asText(getValue("justificativaAtivaAtual")),
+      justificativaAtivaAtual: getValue("reivindicacaoAtivaAtual") === "Não" ? asText(getValue("justificativaAtivaAtual")) : "",
       necessitaDesmembramento: asText(getValue("necessitaDesmembramento")),
       justificativaDesmembramento: getValue("necessitaDesmembramento") === "Sim" ? asText(getValue("justificativaDesmembramento")) : "",
       novasReivindicacoes: getValue("necessitaDesmembramento") === "Sim" ? asText(getValue("novasReivindicacoes")) : ""
@@ -5076,7 +5081,7 @@ function prepararImpressaoPdf(dadosOrigem = null) {
   const root = el("section", "pdf-print-root");
   const title = el("header", "pdf-cover pdf-section");
   title.append(
-    el("h1", "", "Formulário 2 - Produto 2"),
+    el("h1", "", "Formulário 2 - produto 2"),
     el("p", "pdf-footer-line", "CGID/DIDEM/FUNAI | 2026")
   );
   root.append(title);
@@ -5095,15 +5100,15 @@ function prepararImpressaoPdf(dadosOrigem = null) {
       pdfField("Tipo da demanda", dados.reivindicacao?.tipoDemanda)
     ]),
     criarPdfSecao("2.1 Revisão de limites", [
-      dados.reivindicacao?.tipoDemanda === "Revisão de limites" ? pdfField("Orientação", "A instauração de procedimento de redimensionamento não é vedada quando houver descumprimento do art. 231 da Constituição, pedido de revisão até 5 anos da demarcação anterior e comprovação de grave e insanável erro no procedimento ou nos limites da TI.") : null,
-      pdfField("Qual é o nome da Terra Indígena já regularizada?", dados.reivindicacao?.revisaoLimites?.nomeTiOriginal),
-      pdfField("Qual é o último ato de regularização da Terra Indígena anteriormente demarcada?", dados.reivindicacao?.revisaoLimites?.ultimoAtoRegularizacao),
+      dados.reivindicacao?.tipoDemanda === "Revisão de limites" ? pdfField("Orientação", "A instauração de procedimento de redimensionamento não é vedada quando houver descumprimento do art. 231 da constituição, pedido de revisão até 5 anos da demarcação anterior e comprovação de grave e insanável erro no procedimento ou nos limites da TI.") : null,
+      pdfField("Qual é o nome da terra indígena já regularizada?", dados.reivindicacao?.revisaoLimites?.nomeTiOriginal),
+      pdfField("Qual é o último ato de regularização da terra indígena anteriormente demarcada?", dados.reivindicacao?.revisaoLimites?.ultimoAtoRegularizacao),
       pdfField("Nome do ato", dados.reivindicacao?.revisaoLimites?.nomeDocumentoRegularizacao),
       pdfField("Data do ato", formatarDataPdf(dados.reivindicacao?.revisaoLimites?.dataDocumentoRegularizacao)),
       dados.reivindicacao?.tipoDemanda === "Revisão de limites" ? pdfField("Prazo do pedido de revisão", "Identificar a data da demarcação anterior e a data do pedido de revisão. O pedido deve ter sido formulado no prazo fixado pelo STF, que é de 5 anos") : null,
       pdfField("Data da primeira menção", formatarDataPdf(dados.reivindicacao?.revisaoLimites?.dataPrimeiraMencaoReivindicacao)),
       pdfRadio("A área foi reivindicada dentro do prazo decadencial de 5 anos?", dados.reivindicacao?.revisaoLimites?.areaPrazoDecadencial, ["Sim", "Não"]),
-      pdfRadio("Há documentação que revele grave e insanável erro na condução da primeira demarcação?", dados.reivindicacao?.revisaoLimites?.erroPrimeiraDemarcacao, ["Sim", "Não"]),
+      pdfRadio("A demanda se enquadra nos requisitos definidos pelo STF para instauração de procedimento de revisão de limites?", dados.reivindicacao?.revisaoLimites?.erroPrimeiraDemarcacao, ["Sim", "Não"]),
       pdfField("Tipos de erro", asList(dados.reivindicacao?.revisaoLimites?.tiposErroPrimeiraDemarcacao).join(", ")),
       pdfField("Outro erro", dados.reivindicacao?.revisaoLimites?.outroErroPrimeiraDemarcacao),
     ]),
@@ -5152,8 +5157,8 @@ function prepararImpressaoPdf(dadosOrigem = null) {
     criarPdfSecao("5. Encaminhamentos e recomendações", [
       pdfRadio("A reivindicação permanece ativa e atual?", dados.encaminhamentos?.reivindicacaoAtivaAtual, ["Sim", "Não"]),
       pdfField("Motivo da inatividade", dados.encaminhamentos?.motivoInatividade),
-      pdfField("Justificativa da situação atual", dados.encaminhamentos?.justificativaAtivaAtual),
-      pdfRadio("Há indícios de que essa reivindicação poderá ser agrupada com outras da região em caso de compor um Grupo Técnico (GT) para realização dos estudos?", dados.encaminhamentos?.relacaoOutrasReivindicacoes, ["Sim", "Não"]),
+      pdfField("Justificativa", dados.encaminhamentos?.justificativaAtivaAtual),
+      pdfRadio("Há indícios de que essa reivindicação poderá ser agrupada com outras da região em caso de compor um grupo técnico (GT) para realização dos estudos?", dados.encaminhamentos?.relacaoOutrasReivindicacoes, ["Sim", "Não"]),
       ...asList(dados.encaminhamentos?.agrupamentos).map((item) => criarPdfSecao(`ID da reivindicação: ${item.id}`, [pdfField("Descrição da relação", item.descricao) || pdfField("Descrição da relação", "Não informada")])),
       pdfRadio("Entende-se que esta reivindicação necessita ser desmembrada em duas ou mais novas reivindicações independentes?", dados.encaminhamentos?.necessitaDesmembramento, ["Sim", "Não"]),
       pdfField("Justificativa do desmembramento", dados.encaminhamentos?.justificativaDesmembramento),
@@ -5337,6 +5342,11 @@ function addAgrupamento(item = {}) {
   return row;
 }
 
+function syncAgrupamentoButtons() {
+  const buttons = form.querySelectorAll(".remove-agrupamento");
+  buttons.forEach((button) => { button.disabled = buttons.length <= 1; });
+}
+
 function restoreAgrupamentos(items) {
   document.getElementById("agrupamentosList")?.replaceChildren();
   items.forEach(addAgrupamento);
@@ -5353,6 +5363,7 @@ function handleAgrupamentoClick(event) {
   if (event.target.closest("#addAgrupamentoBtn")) {
     addAgrupamento().querySelector("input").focus();
   } else if (event.target.closest(".remove-agrupamento")) {
+    if (getAgrupamentos().length <= 1) return;
     event.target.closest(".agrupamento-item").remove();
   } else return;
   updateConditionals({ renderDynamic: false });
@@ -5395,6 +5406,7 @@ function normalizarRegistroAtual(original) {
   if (situacao.povosIsolados !== "Sim") situacao.detalhesPovosIsolados = "";
   if (situacao.comunidadesTradicionais !== "Sim") situacao.tiposComunidadeTradicional = [];
   if (!asList(situacao.tiposComunidadeTradicional).includes("Outros")) situacao.descricaoComunidadeTradicional = "";
+  encaminhamentos.justificativaAtivaAtual = encaminhamentos.reivindicacaoAtivaAtual === "Não" ? asText(encaminhamentos.justificativaAtivaAtual) : "";
   encaminhamentos.agrupamentos = encaminhamentos.relacaoOutrasReivindicacoes === "Sim" ? normalizarAgrupamentos(encaminhamentos) : [];
   delete encaminhamentos.idsReivindicacoesRelacionadas;
   delete encaminhamentos.descricaoRelacaoReivindicacoes;

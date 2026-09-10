@@ -7,6 +7,7 @@ const root=path.resolve(__dirname,'..');
 const html=['acesso','dashboard','formulario'].map(x=>fs.readFileSync(path.join(root,'html',x+'.html'),'utf8')).join('\n');
 const dom=new JSDOM(html,{url:'https://local.test',runScripts:'outside-only',pretendToBeVisual:true});
 const w=dom.window;
+w.scrollTo=()=>{};
 w.console={...console,log(){}};
 w.eval(fs.readFileSync(path.join(root,'js/script.js'),'utf8').replace('\ninit();','\n'));
 w.eval('cacheDomElements(); setAuthorizedEmail("teste@example.com"); resetCoordenadaRows(); bindEvents(); updateConditionals();');
@@ -20,16 +21,22 @@ const seed={formularioId:'teste-local',consultor:{nome:'Teste',email:'teste@exam
 w.preencherFormularioPorJson(seed);
 assert.deepEqual(json(w.validateRequiredFields()),[],'formulário completo válido');
 let payload=w.montarFormularioJson('Enviado');
-assert.equal(payload.encaminhamentos.justificativaAtivaAtual,'Permanece ativa');
+assert.equal(payload.encaminhamentos.justificativaAtivaAtual,'');
+assert(!w.document.getElementById('justificativaAtivaAtualWrap').classList.contains('is-visible'));
 for(const name of ['reivindicacaoAtivaAtual','relacaoOutrasReivindicacoes','necessitaDesmembramento','temEmpreendimento','ocupantesNaoIndigenas','nivelTensaoLocal']){
  const previous=w.getValue(name);set(name,'');assert(w.validateRequiredFields().length>0,name+' obrigatório');set(name,previous);
 }
 set('temEmpreendimento','Sim');assert(w.validateRequiredFields().length>0);set('descricaoEmpreendimento','Usina');assert.equal(w.validateRequiredFields().length,0);
 set('temEmpreendimento','Não');assert.equal(w.montarFormularioJson().situacaoArea.descricaoEmpreendimento,'');
 set('reivindicacaoAtivaAtual','Não');assert(w.validateRequiredFields().length>0);set('motivoInatividade','Abarcada por TI demarcada');
+assert(w.document.getElementById('justificativaAtivaAtualWrap').classList.contains('is-visible'));
+assert.equal(w.document.querySelector('[name="justificativaAtivaAtual"]').tagName,'TEXTAREA');
+set('justificativaAtivaAtual','Texto do USUÁRIO com STF e FUNAI\nSegunda linha');
 set('necessitaDesmembramento','Sim');assert(w.validateRequiredFields().length>0);set('justificativaDesmembramento','Justificativa extensa\n'.repeat(500));set('novasReivindicacoes','Área A\nÁrea B');
 set('relacaoOutrasReivindicacoes','Sim');assert(w.validateRequiredFields().length>0);
-w.document.getElementById('addAgrupamentoBtn').click();
+assert.equal(w.getAgrupamentos().length,1,'primeira linha automática');
+w.document.querySelector('.remove-agrupamento').click();
+assert.equal(w.getAgrupamentos().length,1,'última linha não pode ser removida');
 let rows=[...w.document.querySelectorAll('.agrupamento-item')];rows[0].querySelector('input').value='234';rows[0].querySelector('textarea').value='Descrição A';
 w.document.getElementById('addAgrupamentoBtn').click();rows=[...w.document.querySelectorAll('.agrupamento-item')];rows[1].querySelector('input').value='345';rows[1].querySelector('textarea').value='Descrição B';
 assert.equal(w.validateRequiredFields().length,0);
@@ -40,6 +47,10 @@ const wire=json(w.prepararPayloadPowerAutomate(w.normalizarPayloadParaPowerAutom
 w.limparFormulario();w.preencherFormulario({FormularioJson:JSON.stringify(wire)});w.updateConditionals();
 assert.deepEqual(json(w.getAgrupamentos()),json(payload.encaminhamentos.agrupamentos),'persistência e leitura');
 assert.equal(w.getValue('justificativaDesmembramento'),payload.encaminhamentos.justificativaDesmembramento);
+assert.equal(w.getValue('justificativaAtivaAtual'),payload.encaminhamentos.justificativaAtivaAtual);
+w.showStep(3);w.showStep(4);
+assert.deepEqual(json(w.getAgrupamentos()),json(payload.encaminhamentos.agrupamentos),'navegação preserva linhas');
+assert.equal(w.getValue('justificativaAtivaAtual'),payload.encaminhamentos.justificativaAtivaAtual,'navegação preserva justificativa');
 assert.equal(w.validateRequiredFields().length,0);
 w.prepararImpressaoPdf(wire);
 let report=w.document.querySelector('.pdf-print-root').textContent;
@@ -69,6 +80,32 @@ set('ocupantesNaoIndigenas','Sim');assert(w.validateRequiredFields().length>0,'g
 set('comunidadesTradicionais','Sim');assert(w.validateRequiredFields().length>0,'chips obrigatórios');set('comunidadesTradicionais','Não');assert.equal(w.validateRequiredFields().length,0);
 const oldArray=json(old);oldArray.reivindicacao.tipoDemanda=['Revisão de limites'];assert.equal(w.normalizarRegistroAtual(oldArray).reivindicacao.revisaoLimites.nomeTiOriginal,'TI teste');
 assert.deepEqual(json(w.validateRequiredFields(true)),[],'rascunhos parciais continuam permitidos');
+const legacyMissing=json(seed);
+legacyMissing.encaminhamentos={reivindicacaoAtivaAtual:'Não',relacaoOutrasReivindicacoes:'Sim'};
+w.limparFormulario();w.preencherFormularioPorJson(legacyMissing);w.updateConditionals();
+assert.equal(w.getValue('justificativaAtivaAtual'),'','registro antigo sem justificativa');
+assert.equal(w.getAgrupamentos().length,1,'registro antigo sem array recebe linha vazia');
+set('justificativaAtivaAtual','Texto LIVRE: Reserva Indígena, STF, FUNAI');
+w.document.querySelector('.agrupamento-item input').value='ID-A';
+w.document.querySelector('.agrupamento-item textarea').value='Relação ORIGINAL';
+for(const status of ['Rascunho','Enviado']){
+ const saved=json(w.montarFormularioJson(status));
+ w.limparFormulario();w.preencherFormulario({FormularioJson:JSON.stringify(saved)});w.updateConditionals();
+ assert.equal(w.getValue('justificativaAtivaAtual'),'Texto LIVRE: Reserva Indígena, STF, FUNAI');
+ assert.equal(w.getAgrupamentos()[0].descricao,'Relação ORIGINAL');
+ w.prepararImpressaoPdf(saved);
+ assert(w.document.querySelector('.pdf-print-root').textContent.includes('Texto LIVRE: Reserva Indígena, STF, FUNAI'));
+}
+set('reivindicacaoAtivaAtual','Sim');set('relacaoOutrasReivindicacoes','Não');
+for(const status of ['Rascunho','Enviado']){
+ const saved=json(w.prepararPayloadPowerAutomate(w.normalizarPayloadParaPowerAutomate(w.montarFormularioJson(status))));
+ assert.equal(saved.encaminhamentos.justificativaAtivaAtual,'');
+ assert.deepEqual(saved.encaminhamentos.agrupamentos,[]);
+}
+assert(!w.document.getElementById('idsReivindicacoesRelacionadasWrap').classList.contains('is-visible'));
+assert.equal(w.document.querySelector('option[value="Alto Solimões 1"]').textContent,'Alto solimões 1');
+assert.equal(w.document.querySelector('[name="tipoDemanda"]').value,'Reserva Indígena');
+assert(w.document.querySelector('[name="erroPrimeiraDemarcacao"]').closest('fieldset').textContent.includes('A demanda se enquadra nos requisitos definidos pelo STF para instauração de procedimento de revisão de limites?'));
 console.log('PASS: criação, edição, persistência JSON, registros antigos, validação obrigatória/condicional, IDs independentes, datas e relatório com texto longo.');
 dom.window.close();
 
