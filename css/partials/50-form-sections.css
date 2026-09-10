@@ -252,6 +252,31 @@
   text-transform: uppercase;
 }
 
+.revision-info {
+  padding: 16px;
+  border: 1px solid var(--terracotta);
+  border-radius: 8px;
+  line-height: 1.5;
+}
+
+.field-help {
+  font-size: 0.9rem;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+#formApp .section-heading h2,
+#formApp .field-section h3,
+#formApp .modality-panel__title {
+  text-transform: none;
+}
+
+.agrupamento-item {
+  padding: 16px 0;
+  border-bottom: 1px solid var(--muted);
+  margin-bottom: 16px;
+}
+
 .modality-panel__grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

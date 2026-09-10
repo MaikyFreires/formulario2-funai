@@ -109,7 +109,7 @@
     margin-bottom: 0.8mm;
     color: #333;
     font-size: 10.2px;
-    text-transform: uppercase;
+    text-transform: none;
   }
 
   .pdf-field span {
@@ -119,6 +119,16 @@
   .pdf-field-long,
   .pdf-radio,
   .pdf-table-wrap {
+    grid-column: 1 / -1;
+  }
+
+  .pdf-field-long {
+    page-break-inside: auto;
+    break-inside: auto;
+    overflow-wrap: anywhere;
+  }
+
+  .pdf-section-body > .pdf-section {
     grid-column: 1 / -1;
   }
 

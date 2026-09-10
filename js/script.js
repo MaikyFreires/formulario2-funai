@@ -402,6 +402,7 @@ async function openForm({ reset = false, mode = "edit" } = {}) {
 function limparFormulario() {
   activePersistenceMode = "create";
   form.reset();
+  restoreAgrupamentos([]);
   selectedEtnias = [];
   selectedOutrasEtnias = [];
   selectedEstados = [];
@@ -452,6 +453,7 @@ function bindEvents() {
   form.addEventListener("click", handleConflictEthnicityClick);
   form.addEventListener("keydown", handleConflictEthnicityKeydown);
   form.addEventListener("submit", enviarFormulario);
+  form.addEventListener("click", handleAgrupamentoClick);
   addEtniaBtn?.addEventListener("click", addSelectedEtnia);
   etniaInput?.addEventListener("keydown", handleEtniaKeydown);
   etniaChips?.addEventListener("click", removeSelectedEtnia);
@@ -1164,6 +1166,8 @@ function clearFieldError(fieldId) {
 
 function getFieldErrorTarget(fieldId) {
   const customTargets = {
+    idsReivindicacoesRelacionadasWrap: () => ({ container: document.getElementById("idsReivindicacoesRelacionadasWrap"), control: document.getElementById("addAgrupamentoBtn") }),
+    comunidadeTradicionalInput: () => ({ container: comunidadeTradicionalInput.closest(".multi-autocomplete"), control: comunidadeTradicionalInput }),
     etnias: () => ({ container: etniaInput.closest(".multi-autocomplete"), control: etniaInput }),
     outraEtnia: () => ({ container: document.querySelector("#outraEtniaWrap"), control: outraEtniaInput }),
     estados: () => ({ container: estadoInput.closest(".multi-autocomplete"), control: estadoInput }),
@@ -2201,10 +2205,10 @@ function criarResumoPdf(dados) {
 }
 
 function pdfField(label, value) {
-  const text = asText(value);
+  const text = textoRelatorio(value);
   if (!text) return null;
   const row = el("div", text.length > 95 ? "pdf-field pdf-field-long" : "pdf-field");
-  row.append(el("strong", "", label), el("span", "", text));
+  row.append(el("strong", "", textoRelatorio(label)), el("span", "", text));
   return row;
 }
 
@@ -2266,7 +2270,7 @@ function formatarDataPdf(value) {
 function el(tagName, className = "", text = "") {
   const element = document.createElement(tagName);
   if (className) element.className = className;
-  if (text) element.textContent = text;
+  if (text) element.textContent = asText(text).replace(/\*\*/g, "");
   return element;
 }
 
@@ -2905,6 +2909,7 @@ function getReportStatus(relatorio) {
 }
 
 function restoreValues(values) {
+  restoreAgrupamentos(values.agrupamentos || []);
   const etnias = asListOrSplit(values.etnias);
   const outrasEtnias = asListOrSplit(values.outrasEtnias || values.outraEtnia);
   const estados = asListOrSplit(values.estados);
@@ -4297,7 +4302,7 @@ function addCoordenadaRow(coordenada = {}, shouldFocus = true) {
         <option>Não</option>
       </select>
     </td>
-    <td><input name="comentarioCoordenada" type="text" placeholder="Comentário da coordenada" aria-label="Comentário da coordenada"></td>
+    <td><input name="comentarioCoordenada" type="text" placeholder="Descrição da coordenada" aria-label="Descrição da coordenada"></td>
     <td class="coordinate-actions">
       <button type="button" class="icon-button remove-coordenada-btn" aria-label="Remover coordenada">×</button>
       <button type="button" class="icon-button add-coordenada-row-btn" aria-label="Adicionar coordenada">+</button>
@@ -4693,10 +4698,10 @@ function updateConditionals({ renderDynamic = true } = {}) {
   setConditional("povosIsoladosWrap", getValue("povosIsolados") === "Sim");
   setConditional("tiposOcupantesNaoIndigenasWrap", getValue("ocupantesNaoIndigenas") === "Sim");
   setConditional("outroOcupanteNaoIndigenaWrap", getValue("ocupantesNaoIndigenas") === "Sim" && getCheckedValues("tiposOcupantesNaoIndigenas").includes("Outros"));
-  const hasOutraVulnerabilidade = getCheckedValues("vulnerabilidades").includes("Outros");
-  setConditional("outraVulnerabilidadeWrap", hasOutraVulnerabilidade);
+  setConditional("descricaoEmpreendimentoWrap", getValue("temEmpreendimento") === "Sim");
+  setConditional("motivoInatividadeWrap", getValue("reivindicacaoAtivaAtual") === "Não");
+  setConditional("desmembramentoWrap", getValue("necessitaDesmembramento") === "Sim");
   setConditional("idsReivindicacoesRelacionadasWrap", getValue("relacaoOutrasReivindicacoes") === "Sim");
-  setConditional("descricaoRelacaoReivindicacoesWrap", getValue("relacaoOutrasReivindicacoes") === "Sim");
 
   const demandas = getCheckedValues("tipoDemanda");
   const isRevisao = hasDemand(demandas, "Revisão de limites");
@@ -4705,6 +4710,7 @@ function updateConditionals({ renderDynamic = true } = {}) {
   const hasImovelDestinacao = getValue("imovelDestinacaoComunidade") === "Sim";
   setConditional("revisaoLimitesWrap", isRevisao);
   setConditional("reservaIndigenaWrap", isReserva);
+  setConditional("detalheAreaInteresseWrap", isReserva && getValue("comunidadeIndicouArea") === "Sim");
   setConditional("nomeDocumentoRegularizacaoWrap", isRevisao && hasUltimoAtoRegularizacao);
   setConditional("dataDocumentoRegularizacaoWrap", isRevisao && hasUltimoAtoRegularizacao);
   setConditional("tiposErroPrimeiraDemarcacaoWrap", isRevisao && getValue("erroPrimeiraDemarcacao") === "Sim");
@@ -4716,13 +4722,12 @@ function updateConditionals({ renderDynamic = true } = {}) {
     clearFieldValue("dataDocumentoRegularizacao");
   }
   if (!isReserva || !hasImovelDestinacao) clearFieldValue("informacoesImovelDestinacao");
-  if (!hasOutraVulnerabilidade) clearFieldValue("outraVulnerabilidade");
 
   if (renderDynamic) {
     renderAcoesJudiciaisDetalhadas();
     renderDetalhesConflitos();
   }
-  updateVulnerabilityDetails();
+  syncRequiredControls();
   updateCoordinateFormatDetails();
 }
 
@@ -4747,32 +4752,41 @@ function validateRequiredFields(isDraftSave = false) {
     { fieldId: "outroErroPrimeiraDemarcacao", label: "Descrição de outros erros", isValid: () => !isRevisao || !getCheckedValues("tiposErroPrimeiraDemarcacao").includes("Outros") || hasValue("outroErroPrimeiraDemarcacao") },
     { fieldId: "estados", label: "Estado", isValid: () => selectedEstados.length > 0 },
     { fieldId: "municipios", label: "Município", isValid: () => selectedMunicipios.length > 0 },
-    { fieldId: "localizacaoDemanda", label: "Localização da demanda", isValid: () => hasValue("localizacaoDemanda") },
+    { fieldId: "localizacaoDemanda", label: "Localização da demanda conforme relatório", isValid: () => hasValue("localizacaoDemanda") },
     { fieldId: "coordenadas", label: "Coordenadas geográficas", isValid: () => areCoordenadasValid() },
     { fieldId: "bioma", label: "Bioma", isValid: () => getCheckedValues("bioma").length > 0 },
-    { fieldId: "faixaFronteira", label: "Faixa de Fronteira", isValid: () => hasChecked("faixaFronteira") },
+    { fieldId: "faixaFronteira", label: "Faixa de fronteira", isValid: () => hasChecked("faixaFronteira") },
     { fieldId: "sobreposicoes", label: "Sobreposições", isValid: () => hasChecked("sobreposicoes") },
     { fieldId: "tiposSobreposicao", label: "Tipos de sobreposição", isValid: () => getValue("sobreposicoes") !== "Sim" || getCheckedValues("tiposSobreposicao").length > 0 },
     { fieldId: "detalheOutrasSobreposicoes", label: "Detalhe de outras sobreposições", isValid: () => !getCheckedValues("tiposSobreposicao").includes("Outros") || hasValue("detalheOutrasSobreposicoes") },
     { fieldId: "indigenasArea", label: "Indígenas estão na área reivindicada", isValid: () => hasChecked("indigenasArea") },
     { fieldId: "situacaoPosse", label: "Situação de posse", isValid: () => getValue("indigenasArea") !== "Sim" || hasChecked("situacaoPosse") },
-    { fieldId: "vulnerabilidades", label: "Critério de vulnerabilidade", isValid: () => getCheckedValues("vulnerabilidades").length > 0 },
-    { fieldId: "outraVulnerabilidade", label: "Outro critério de vulnerabilidade", isValid: () => !getCheckedValues("vulnerabilidades").includes("Outros") || hasValue("outraVulnerabilidade") },
+
     { fieldId: "comunidadesTradicionais", label: "Comunidades tradicionais", isValid: () => hasChecked("comunidadesTradicionais") },
     { fieldId: "descricaoComunidadeTradicional", label: "Outra comunidade tradicional", isValid: () => !selectedComunidadesTradicionais.includes("Outros") || hasValue("descricaoComunidadeTradicional") },
     { fieldId: "povosIsolados", label: "Povos isolados", isValid: () => hasChecked("povosIsolados") },
     { fieldId: "detalhesPovosIsolados", label: "Detalhes de povos isolados", isValid: () => getValue("povosIsolados") !== "Sim" || hasValue("detalhesPovosIsolados") },
     { fieldId: "outroOcupanteNaoIndigena", label: "Descrição de outros ocupantes", isValid: () => !getCheckedValues("tiposOcupantesNaoIndigenas").includes("Outros") || hasValue("outroOcupanteNaoIndigena") },
-    { fieldId: "idsReivindicacoesRelacionadas", label: "IDs das reivindicações relacionadas", isValid: () => getValue("relacaoOutrasReivindicacoes") !== "Sim" || hasValue("idsReivindicacoesRelacionadas") },
-    { fieldId: "descricaoRelacaoReivindicacoes", label: "Descrição da relação", isValid: () => getValue("relacaoOutrasReivindicacoes") !== "Sim" || hasValue("descricaoRelacaoReivindicacoes") }
+
   ];
 
   requiredRules.forEach((rule) => {
+    const controls = Array.from(form.querySelectorAll(`[name="${rule.fieldId}"]`));
+    if (controls.length && !controls.some(isApplicableControl)) return;
     if (rule.isValid()) return;
     const error = showFieldError(rule.fieldId, rule.message || getRequiredFieldMessage(rule.fieldId));
     errors.push({ fieldId: rule.fieldId, label: rule.label, stepIndex: error.stepIndex, target: error.target });
   });
 
+  validateApplicableControls(errors);
+  if (getValue("comunidadesTradicionais") === "Sim" && !getSelectedComunidadesTradicionais().length) {
+    const error = showFieldError("comunidadeTradicionalInput", "Selecione uma comunidade tradicional.");
+    errors.push({ fieldId: "comunidadeTradicionalInput", ...error });
+  }
+  if (getValue("relacaoOutrasReivindicacoes") === "Sim" && !getAgrupamentos().length) {
+    const error = showFieldError("idsReivindicacoesRelacionadasWrap", "Adicione ao menos uma reivindicação.");
+    errors.push({ fieldId: "idsReivindicacoesRelacionadasWrap", ...error });
+  }
   getInvalidDateFields().forEach((field, index) => {
     const error = showControlError(field, `dateField-${index}`, "Informe uma data válida no formato dd/mm/aaaa.");
     errors.push({ fieldId: `dateField-${index}`, label: getDateFieldLabel(field), stepIndex: error.stepIndex, target: error.target });
@@ -4782,7 +4796,23 @@ function validateRequiredFields(isDraftSave = false) {
 }
 
 function isRequiredFieldResolved(fieldId) {
-  return validateRequiredFields(true).length === 0 || Boolean(fieldId);
+  const checks = {
+    etnias: () => selectedEtnias.length > 0,
+    outraEtnia: () => !selectedEtnias.includes("Outros") || selectedOutrasEtnias.length > 0,
+    estados: () => selectedEstados.length > 0,
+    municipios: () => selectedMunicipios.length > 0,
+    coordenadas: () => areCoordenadasValid(),
+    comunidadeTradicionalInput: () => getValue("comunidadesTradicionais") !== "Sim" || selectedComunidadesTradicionais.length > 0,
+    idsReivindicacoesRelacionadasWrap: () => getValue("relacaoOutrasReivindicacoes") !== "Sim" || getAgrupamentos().length > 0
+  };
+  if (checks[fieldId]) return checks[fieldId]();
+  const target = form.querySelector(`[data-error-field="${fieldId}"]`);
+  const control = target?.matches("input, select, textarea") ? target : target?.querySelector("input, select, textarea");
+  if (!control) return false;
+  if (!isApplicableControl(control)) return true;
+  if (["radio", "checkbox"].includes(control.type)) return getCheckedValues(control.name).length > 0;
+  if (DATE_BR_FIELD_NAMES.has(control.name)) return isBrazilianDateCompleteAndValid(control.value);
+  return Boolean(control.value.trim()) && control.checkValidity();
 }
 
 function montarFormularioJson(statusFormulario = "Rascunho", now = new Date().toISOString()) {
@@ -4830,10 +4860,11 @@ function montarFormularioJson(statusFormulario = "Rascunho", now = new Date().to
         erroPrimeiraDemarcacao: asText(getValue("erroPrimeiraDemarcacao")),
         tiposErroPrimeiraDemarcacao: tiposErro,
         outroErroPrimeiraDemarcacao: tiposErro.includes("Outros") ? asText(getValue("outroErroPrimeiraDemarcacao")) : "",
-        enquadraRequisitosStf: asText(getValue("enquadraRequisitosStf"))
+
       } : {},
       reservaIndigena: isReserva ? {
         comunidadeIndicouArea: asText(getValue("comunidadeIndicouArea")),
+        detalheAreaInteresse: getValue("comunidadeIndicouArea") === "Sim" ? asText(getValue("detalheAreaInteresse")) : "",
         imovelDestinacaoComunidade,
         informacoesImovelDestinacao: hasImovelDestinacao ? asText(getValue("informacoesImovelDestinacao")) : ""
       } : {}
@@ -4860,13 +4891,14 @@ function montarFormularioJson(statusFormulario = "Rascunho", now = new Date().to
       detalheOutrasSobreposicoes: tiposSobreposicao.includes("Outros") ? asText(getValue("detalheOutrasSobreposicoes")) : ""
     },
     situacaoArea: {
+      temEmpreendimento: asText(getValue("temEmpreendimento")),
+      descricaoEmpreendimento: getValue("temEmpreendimento") === "Sim" ? asText(getValue("descricaoEmpreendimento")) : "",
       indigenasArea: asText(getValue("indigenasArea")),
       situacaoPosse: getValue("indigenasArea") === "Sim" ? asText(getValue("situacaoPosse")) : "",
-      vulnerabilidades: asList(getCheckedValues("vulnerabilidades")),
-      outraVulnerabilidade: getCheckedValues("vulnerabilidades").includes("Outros") ? asText(getValue("outraVulnerabilidade")) : "",
+
       comunidadesTradicionais: asText(getValue("comunidadesTradicionais")),
       tiposComunidadeTradicional: getValue("comunidadesTradicionais") === "Sim" ? asList(getSelectedComunidadesTradicionais()) : [],
-      descricaoComunidadeTradicional: selectedComunidadesTradicionais.includes("Outros") ? asText(getValue("descricaoComunidadeTradicional")) : "",
+      descricaoComunidadeTradicional: getValue("comunidadesTradicionais") === "Sim" && selectedComunidadesTradicionais.includes("Outros") ? asText(getValue("descricaoComunidadeTradicional")) : "",
       povosIsolados: asText(getValue("povosIsolados")),
       detalhesPovosIsolados: getValue("povosIsolados") === "Sim" ? asText(getValue("detalhesPovosIsolados")) : "",
       ocupantesNaoIndigenas: asText(getValue("ocupantesNaoIndigenas")),
@@ -4877,8 +4909,12 @@ function montarFormularioJson(statusFormulario = "Rascunho", now = new Date().to
     encaminhamentos: {
       reivindicacaoAtivaAtual: asText(getValue("reivindicacaoAtivaAtual")),
       relacaoOutrasReivindicacoes: asText(getValue("relacaoOutrasReivindicacoes")),
-      idsReivindicacoesRelacionadas: temRelacao ? parseIdsRelacionados(getValue("idsReivindicacoesRelacionadas")) : [],
-      descricaoRelacaoReivindicacoes: temRelacao ? asText(getValue("descricaoRelacaoReivindicacoes")) : ""
+      agrupamentos: temRelacao ? getAgrupamentos() : [],
+      motivoInatividade: getValue("reivindicacaoAtivaAtual") === "Não" ? asText(getValue("motivoInatividade")) : "",
+      justificativaAtivaAtual: asText(getValue("justificativaAtivaAtual")),
+      necessitaDesmembramento: asText(getValue("necessitaDesmembramento")),
+      justificativaDesmembramento: getValue("necessitaDesmembramento") === "Sim" ? asText(getValue("justificativaDesmembramento")) : "",
+      novasReivindicacoes: getValue("necessitaDesmembramento") === "Sim" ? asText(getValue("novasReivindicacoes")) : ""
     }
   };
 }
@@ -4902,10 +4938,10 @@ function garantirTiposPayload(payload) {
   normalizado.caracterizacaoArea.coordenadas = garantirArray(normalizado.caracterizacaoArea.coordenadas);
   normalizado.caracterizacaoArea.bioma = garantirArray(normalizado.caracterizacaoArea.bioma);
   normalizado.caracterizacaoArea.tiposSobreposicao = garantirArray(normalizado.caracterizacaoArea.tiposSobreposicao);
-  normalizado.situacaoArea.vulnerabilidades = garantirArray(normalizado.situacaoArea.vulnerabilidades);
+
   normalizado.situacaoArea.tiposComunidadeTradicional = garantirArray(normalizado.situacaoArea.tiposComunidadeTradicional);
   normalizado.situacaoArea.tiposOcupantesNaoIndigenas = garantirArray(normalizado.situacaoArea.tiposOcupantesNaoIndigenas);
-  normalizado.encaminhamentos.idsReivindicacoesRelacionadas = garantirArray(normalizado.encaminhamentos.idsReivindicacoesRelacionadas);
+  normalizado.encaminhamentos.agrupamentos = normalizarAgrupamentos(normalizado.encaminhamentos);
 
   return normalizado;
 }
@@ -4951,6 +4987,7 @@ function prepararPayloadPowerAutomate(payload) {
 }
 
 function flattenDraft(draft) {
+  draft = normalizarRegistroAtual(draft);
   const reivindicacao = draft.reivindicacao || {};
   const revisao = reivindicacao.revisaoLimites || {};
   const reserva = reivindicacao.reservaIndigena || {};
@@ -4976,8 +5013,9 @@ function flattenDraft(draft) {
     erroPrimeiraDemarcacao: revisao.erroPrimeiraDemarcacao,
     tiposErroPrimeiraDemarcacao: revisao.tiposErroPrimeiraDemarcacao,
     outroErroPrimeiraDemarcacao: revisao.outroErroPrimeiraDemarcacao,
-    enquadraRequisitosStf: revisao.enquadraRequisitosStf,
+
     comunidadeIndicouArea: reserva.comunidadeIndicouArea,
+    detalheAreaInteresse: reserva.detalheAreaInteresse,
     imovelDestinacaoComunidade: reserva.imovelDestinacaoComunidade,
     informacoesImovelDestinacao: reserva.informacoesImovelDestinacao,
     estados: asListOrSplit(caracterizacao.estados || caracterizacao.estado || draft.Estados || draft.estados),
@@ -5007,10 +5045,11 @@ function flattenDraft(draft) {
     detalheProjetoDesenvolvimentoSustentavel: caracterizacao.detalheProjetoDesenvolvimentoSustentavel,
     detalheProjetoAssentamentoFlorestal: caracterizacao.detalheProjetoAssentamentoFlorestal,
     detalheOutrasSobreposicoes: caracterizacao.detalheOutrasSobreposicoes,
+    temEmpreendimento: situacao.temEmpreendimento,
+    descricaoEmpreendimento: situacao.descricaoEmpreendimento,
     indigenasArea: situacao.indigenasArea,
     situacaoPosse: situacao.situacaoPosse,
-    vulnerabilidades: situacao.vulnerabilidades,
-    outraVulnerabilidade: situacao.outraVulnerabilidade || situacao.outroCriterioVulnerabilidade,
+
     comunidadesTradicionais: situacao.comunidadesTradicionais,
     tiposComunidadeTradicional: asListOrSplit(situacao.tiposComunidadeTradicional),
     descricaoComunidadeTradicional: situacao.descricaoComunidadeTradicional,
@@ -5022,8 +5061,12 @@ function flattenDraft(draft) {
     nivelTensaoLocal: situacao.nivelTensaoLocal,
     reivindicacaoAtivaAtual: encaminhamentos.reivindicacaoAtivaAtual,
     relacaoOutrasReivindicacoes: encaminhamentos.relacaoOutrasReivindicacoes,
-    idsReivindicacoesRelacionadas: asListOrSplit(encaminhamentos.idsReivindicacoesRelacionadas).join(", "),
-    descricaoRelacaoReivindicacoes: encaminhamentos.descricaoRelacaoReivindicacoes
+    agrupamentos: normalizarAgrupamentos(encaminhamentos),
+    motivoInatividade: encaminhamentos.motivoInatividade,
+    justificativaAtivaAtual: encaminhamentos.justificativaAtivaAtual,
+    necessitaDesmembramento: encaminhamentos.necessitaDesmembramento,
+    justificativaDesmembramento: encaminhamentos.justificativaDesmembramento,
+    novasReivindicacoes: encaminhamentos.novasReivindicacoes
   };
 }
 
@@ -5044,7 +5087,7 @@ function prepararImpressaoPdf(dadosOrigem = null) {
       pdfField("E-mail", dados.consultor?.email),
       pdfField("Área de estudo", dados.consultor?.areaEstudo)
     ]),
-    criarPdfSecao("2. Reivindicação", [
+    criarPdfSecao("2. Dados gerais da reivindicação", [
       pdfField("ID", dados.reivindicacao?.id),
       pdfField("Nome da reivindicação", dados.reivindicacao?.nome),
       pdfField("Etnias", asList(dados.reivindicacao?.etnias).join(", ")),
@@ -5052,55 +5095,69 @@ function prepararImpressaoPdf(dadosOrigem = null) {
       pdfField("Tipo da demanda", dados.reivindicacao?.tipoDemanda)
     ]),
     criarPdfSecao("2.1 Revisão de limites", [
-      pdfField("Nome da TI Original", dados.reivindicacao?.revisaoLimites?.nomeTiOriginal),
-      pdfField("Último ato de regularização", dados.reivindicacao?.revisaoLimites?.ultimoAtoRegularizacao),
-      pdfField("Nome do documento", dados.reivindicacao?.revisaoLimites?.nomeDocumentoRegularizacao),
-      pdfField("Data do documento", formatarDataPdf(dados.reivindicacao?.revisaoLimites?.dataDocumentoRegularizacao)),
+      dados.reivindicacao?.tipoDemanda === "Revisão de limites" ? pdfField("Orientação", "A instauração de procedimento de redimensionamento não é vedada quando houver descumprimento do art. 231 da Constituição, pedido de revisão até 5 anos da demarcação anterior e comprovação de grave e insanável erro no procedimento ou nos limites da TI.") : null,
+      pdfField("Qual é o nome da Terra Indígena já regularizada?", dados.reivindicacao?.revisaoLimites?.nomeTiOriginal),
+      pdfField("Qual é o último ato de regularização da Terra Indígena anteriormente demarcada?", dados.reivindicacao?.revisaoLimites?.ultimoAtoRegularizacao),
+      pdfField("Nome do ato", dados.reivindicacao?.revisaoLimites?.nomeDocumentoRegularizacao),
+      pdfField("Data do ato", formatarDataPdf(dados.reivindicacao?.revisaoLimites?.dataDocumentoRegularizacao)),
+      dados.reivindicacao?.tipoDemanda === "Revisão de limites" ? pdfField("Prazo do pedido de revisão", "Identificar a data da demarcação anterior e a data do pedido de revisão. O pedido deve ter sido formulado no prazo fixado pelo STF, que é de 5 anos") : null,
       pdfField("Data da primeira menção", formatarDataPdf(dados.reivindicacao?.revisaoLimites?.dataPrimeiraMencaoReivindicacao)),
-      pdfRadio("Dentro do prazo decadencial de 5 anos?", dados.reivindicacao?.revisaoLimites?.areaPrazoDecadencial, ["Sim", "Não"]),
-      pdfRadio("Erro grave e insanável na primeira demarcação?", dados.reivindicacao?.revisaoLimites?.erroPrimeiraDemarcacao, ["Sim", "Não"]),
+      pdfRadio("A área foi reivindicada dentro do prazo decadencial de 5 anos?", dados.reivindicacao?.revisaoLimites?.areaPrazoDecadencial, ["Sim", "Não"]),
+      pdfRadio("Há documentação que revele grave e insanável erro na condução da primeira demarcação?", dados.reivindicacao?.revisaoLimites?.erroPrimeiraDemarcacao, ["Sim", "Não"]),
       pdfField("Tipos de erro", asList(dados.reivindicacao?.revisaoLimites?.tiposErroPrimeiraDemarcacao).join(", ")),
       pdfField("Outro erro", dados.reivindicacao?.revisaoLimites?.outroErroPrimeiraDemarcacao),
-      pdfRadio("Enquadra requisitos do STF?", dados.reivindicacao?.revisaoLimites?.enquadraRequisitosStf, ["Sim", "Não"])
     ]),
-    criarPdfSecao("2.2 Reserva Indígena", [
-      pdfRadio("Comunidade indicou área específica?", dados.reivindicacao?.reservaIndigena?.comunidadeIndicouArea, ["Sim", "Não"]),
+    criarPdfSecao("2.2 Reserva indígena", [
+      pdfRadio("A comunidade indicou uma área ou região de interesse?", dados.reivindicacao?.reservaIndigena?.comunidadeIndicouArea, ["Sim", "Não"]),
+      pdfField("Detalhe da área ou região de interesse", dados.reivindicacao?.reservaIndigena?.detalheAreaInteresse),
       pdfRadio("Existe imóvel passível de destinação?", dados.reivindicacao?.reservaIndigena?.imovelDestinacaoComunidade, ["Sim", "Não"]),
       pdfField("Informações sobre imóvel/destinação", dados.reivindicacao?.reservaIndigena?.informacoesImovelDestinacao)
     ]),
     criarPdfSecao("3. Caracterização da área reivindicada", [
       pdfField("Estado", asList(dados.caracterizacaoArea?.estados).join(", ") || dados.caracterizacaoArea?.estado),
       pdfField("Município", asList(dados.caracterizacaoArea?.municipios).join(", ") || dados.caracterizacaoArea?.municipio),
-      pdfField("Localização da demanda", dados.caracterizacaoArea?.localizacaoDemanda),
-      pdfTabela("Coordenadas", ["Latitude", "Longitude", "Sede do município?", "Comentário"], asList(dados.caracterizacaoArea?.coordenadas).map((item) => [
+      pdfField("Localização da demanda conforme relatório", dados.caracterizacaoArea?.localizacaoDemanda),
+      pdfTabela("Coordenadas", ["Latitude", "Longitude", "Sede do município?", "Descrição da coordenada"], asList(dados.caracterizacaoArea?.coordenadas).map((item) => [
         item.latitude,
         item.longitude,
         item.sedeMunicipio,
         item.comentario
       ])),
       pdfField("Bioma", asList(dados.caracterizacaoArea?.bioma).join(", ")),
-      pdfRadio("Faixa de Fronteira", dados.caracterizacaoArea?.faixaFronteira, ["Sim", "Não"]),
+      pdfRadio("Faixa de fronteira", dados.caracterizacaoArea?.faixaFronteira, ["Sim", "Não"]),
       pdfRadio("Sobreposições", dados.caracterizacaoArea?.sobreposicoes, ["Sim", "Não"]),
-      pdfField("Tipos de sobreposição", asList(dados.caracterizacaoArea?.tiposSobreposicao).join(", "))
+      pdfField("Tipos de sobreposição", asList(dados.caracterizacaoArea?.tiposSobreposicao).join(", ")),
+      ...Object.entries({
+        "Unidade de Conservação Federal": "detalheUcFederal", "Unidade de Conservação Estadual": "detalheUcEstadual", "Unidade de Conservação Municipal": "detalheUcMunicipal",
+        "Gleba Pública Federal": "detalheGlebaFederal", "Gleba Pública Estadual": "detalheGlebaEstadual", "Território Quilombola": "detalheTerritorioQuilombola",
+        "Projeto de Assentamento (PA)": "detalheProjetoAssentamento", "Projeto de Assentamento Agroextrativista (PAE)": "detalheProjetoAssentamentoAgroextrativista",
+        "Projeto de Desenvolvimento Sustentável (PDS)": "detalheProjetoDesenvolvimentoSustentavel", "Projeto de Assentamento Florestal (PAF)": "detalheProjetoAssentamentoFlorestal", "Outros": "detalheOutrasSobreposicoes"
+      }).map(([tipo, campo]) => asList(dados.caracterizacaoArea?.tiposSobreposicao).includes(tipo) ? pdfField(tipo, dados.caracterizacaoArea?.[campo]) : null)
     ]),
     criarPdfSecao("4. Situação da área reivindicada", [
       pdfRadio("Indígenas estão na área reivindicada?", dados.situacaoArea?.indigenasArea, ["Sim", "Não"]),
       pdfField("Situação de posse", dados.situacaoArea?.situacaoPosse),
-      pdfField("Critérios de vulnerabilidade", asList(dados.situacaoArea?.vulnerabilidades).join(", ")),
+      pdfRadio("Há algum empreendimento na área?", dados.situacaoArea?.temEmpreendimento, ["Sim", "Não"]),
+      pdfField("Descrição do empreendimento", dados.situacaoArea?.descricaoEmpreendimento),
       pdfRadio("Outras comunidades tradicionais?", dados.situacaoArea?.comunidadesTradicionais, ["Sim", "Não"]),
       pdfField("Tipos de comunidade tradicional", asList(dados.situacaoArea?.tiposComunidadeTradicional).join(", ")),
+      pdfField("Outra comunidade tradicional", dados.situacaoArea?.descricaoComunidadeTradicional),
       pdfRadio("Povos isolados?", dados.situacaoArea?.povosIsolados, ["Sim", "Não"]),
       pdfField("Detalhes de povos isolados", dados.situacaoArea?.detalhesPovosIsolados),
-      pdfRadio("Presença de Ocupantes Não Indígenas", dados.situacaoArea?.ocupantesNaoIndigenas, ["Sim", "Não"]),
+      pdfRadio("Presença de ocupantes não indígenas", dados.situacaoArea?.ocupantesNaoIndigenas, ["Sim", "Não"]),
       pdfField("Tipos de ocupantes", asList(dados.situacaoArea?.tiposOcupantesNaoIndigenas).join(", ")),
       pdfField("Outro ocupante", dados.situacaoArea?.outroOcupanteNaoIndigena),
-      pdfField("Nível de Tensão Local", dados.situacaoArea?.nivelTensaoLocal)
+      pdfField("Nível de tensão local", dados.situacaoArea?.nivelTensaoLocal)
     ]),
     criarPdfSecao("5. Encaminhamentos e recomendações", [
-      pdfRadio("Reivindicação permanece ativa e atual?", dados.encaminhamentos?.reivindicacaoAtivaAtual, ["Sim", "Não"]),
-      pdfRadio("Relação com outras reivindicações?", dados.encaminhamentos?.relacaoOutrasReivindicacoes, ["Sim", "Não"]),
-      pdfField("IDs relacionados", asList(dados.encaminhamentos?.idsReivindicacoesRelacionadas).join(", ")),
-      pdfField("Descrição da relação", dados.encaminhamentos?.descricaoRelacaoReivindicacoes)
+      pdfRadio("A reivindicação permanece ativa e atual?", dados.encaminhamentos?.reivindicacaoAtivaAtual, ["Sim", "Não"]),
+      pdfField("Motivo da inatividade", dados.encaminhamentos?.motivoInatividade),
+      pdfField("Justificativa da situação atual", dados.encaminhamentos?.justificativaAtivaAtual),
+      pdfRadio("Há indícios de que essa reivindicação poderá ser agrupada com outras da região em caso de compor um Grupo Técnico (GT) para realização dos estudos?", dados.encaminhamentos?.relacaoOutrasReivindicacoes, ["Sim", "Não"]),
+      ...asList(dados.encaminhamentos?.agrupamentos).map((item) => criarPdfSecao(`ID da reivindicação: ${item.id}`, [pdfField("Descrição da relação", item.descricao) || pdfField("Descrição da relação", "Não informada")])),
+      pdfRadio("Entende-se que esta reivindicação necessita ser desmembrada em duas ou mais novas reivindicações independentes?", dados.encaminhamentos?.necessitaDesmembramento, ["Sim", "Não"]),
+      pdfField("Justificativa do desmembramento", dados.encaminhamentos?.justificativaDesmembramento),
+      pdfField("Novas reivindicações", dados.encaminhamentos?.novasReivindicacoes)
     ]),
     criarAssinaturaGovPdf()
   );
@@ -5111,14 +5168,14 @@ function prepararImpressaoPdf(dadosOrigem = null) {
 
 function normalizarDadosParaPdf(dadosOrigem) {
   if (!dadosOrigem) {
-    return normalizarPayloadParaPowerAutomate(buildPayload("Enviado"));
+    return normalizarRegistroAtual(normalizarPayloadParaPowerAutomate(buildPayload("Enviado")));
   }
 
   const dadosConvertidos = converterJsonSerializadoEmObjeto(dadosOrigem);
   const formularioJson = extrairFormularioJson(dadosConvertidos);
   const dados = formularioJson || dadosConvertidos || {};
   if (!dados.situacaoArea && dados.ocupacaoIndigena) dados.situacaoArea = dados.ocupacaoIndigena;
-  return dados;
+  return normalizarRegistroAtual(dados);
 }
 
 function criarResumoPdf(dados) {
@@ -5164,7 +5221,7 @@ function addCoordenadaRow(coordenada = {}, shouldFocus = true) {
         <option>Não</option>
       </select>
     </td>
-    <td><input name="comentarioCoordenada" type="text" placeholder="Comentário da coordenada" aria-label="Comentário da coordenada"></td>
+    <td><input name="comentarioCoordenada" type="text" placeholder="Descrição da coordenada" aria-label="Descrição da coordenada"></td>
     <td class="coordinate-actions">
       <button type="button" class="icon-button remove-coordenada-btn" aria-label="Remover coordenada">×</button>
       <button type="button" class="icon-button add-coordenada-row-btn" aria-label="Adicionar coordenada">+</button>
@@ -5220,4 +5277,141 @@ function parseIdsRelacionados(value) {
     .split(/[,\n;]/)
     .map((item) => item.trim())
     .filter(Boolean);
+}
+
+// Conditional applicability must not depend on the currently displayed step.
+function isApplicableControl(field) {
+  if (field.disabled || field.type === "hidden") return false;
+  let parent = field.parentElement;
+  while (parent && parent !== form) {
+    if (parent.classList.contains("conditional") && !parent.classList.contains("is-visible")) return false;
+    parent = parent.parentElement;
+  }
+  return true;
+}
+
+function syncRequiredControls() {
+  form.querySelectorAll("input[name], select[name], textarea[name]").forEach((field) => {
+    field.required = isApplicableControl(field) && field.type !== "checkbox";
+  });
+}
+
+function validateApplicableControls(errors) {
+  const checkedGroups = new Set();
+  form.querySelectorAll("input[name], select[name], textarea[name]").forEach((field, index) => {
+    if (!isApplicableControl(field)) return;
+    let valid;
+    if (["radio", "checkbox"].includes(field.type)) {
+      if (checkedGroups.has(field.name)) return;
+      checkedGroups.add(field.name);
+      valid = getCheckedValues(field.name).length > 0;
+    } else {
+      valid = Boolean(field.value.trim()) && field.checkValidity();
+      if (DATE_BR_FIELD_NAMES.has(field.name)) valid = valid && isBrazilianDateCompleteAndValid(field.value);
+    }
+    if (valid || errors.some((error) => error.fieldId === field.name)) return;
+    const fieldId = `required-control-${index}`;
+    const error = showControlError(field, fieldId, "Preencha este campo obrigatório com um valor válido.");
+    errors.push({ fieldId, label: field.getAttribute("aria-label") || field.name, ...error });
+  });
+}
+
+function normalizarAgrupamentos(encaminhamentos = {}) {
+  if (Array.isArray(encaminhamentos.agrupamentos)) {
+    return encaminhamentos.agrupamentos.map((item) => ({ id: asText(item?.id), descricao: asText(item?.descricao) }));
+  }
+  const ids = Array.isArray(encaminhamentos.idsReivindicacoesRelacionadas)
+    ? encaminhamentos.idsReivindicacoesRelacionadas
+    : parseIdsRelacionados(encaminhamentos.idsReivindicacoesRelacionadas);
+  return ids.map((id) => ({ id: asText(id), descricao: asText(encaminhamentos.descricaoRelacaoReivindicacoes) }));
+}
+
+function addAgrupamento(item = {}) {
+  const row = el("div", "agrupamento-item field-grid");
+  row.innerHTML = `<label>ID da reivindicação<input name="agrupamentoId" type="text" pattern="[^,;\\s]+" required></label>
+    <label>Descrição breve da relação<textarea name="agrupamentoDescricao" rows="3" required></textarea></label>
+    <button type="button" class="secondary remove-agrupamento">Remover reivindicação</button>`;
+  row.querySelector("input").value = asText(item.id);
+  row.querySelector("textarea").value = asText(item.descricao);
+  document.getElementById("agrupamentosList")?.append(row);
+  return row;
+}
+
+function restoreAgrupamentos(items) {
+  document.getElementById("agrupamentosList")?.replaceChildren();
+  items.forEach(addAgrupamento);
+}
+
+function getAgrupamentos() {
+  return Array.from(form.querySelectorAll(".agrupamento-item")).map((row) => ({
+    id: row.querySelector("input").value.trim(),
+    descricao: row.querySelector("textarea").value.trim()
+  }));
+}
+
+function handleAgrupamentoClick(event) {
+  if (event.target.closest("#addAgrupamentoBtn")) {
+    addAgrupamento().querySelector("input").focus();
+  } else if (event.target.closest(".remove-agrupamento")) {
+    event.target.closest(".agrupamento-item").remove();
+  } else return;
+  updateConditionals({ renderDynamic: false });
+  agendarAutosave();
+}
+
+function normalizarRegistroAtual(original) {
+  const dados = JSON.parse(JSON.stringify(original));
+  const reivindicacao = dados.reivindicacao ||= {};
+  reivindicacao.tipoDemanda = asListOrSplit(reivindicacao.tipoDemanda)[0] || asText(reivindicacao.tipoDemanda);
+  const revisao = reivindicacao.revisaoLimites ||= {};
+  const reserva = reivindicacao.reservaIndigena ||= {};
+  const situacao = dados.situacaoArea ||= dados.ocupacaoIndigena || {};
+  const encaminhamentos = dados.encaminhamentos ||= {};
+  delete revisao.enquadraRequisitosStf;
+  if (!["Delimitação", "Declaração", "Homologação", "Registro"].includes(revisao.ultimoAtoRegularizacao)) {
+    revisao.ultimoAtoRegularizacao = "";
+    revisao.nomeDocumentoRegularizacao = "";
+    revisao.dataDocumentoRegularizacao = "";
+  }
+  revisao.tiposErroPrimeiraDemarcacao = asList(revisao.tiposErroPrimeiraDemarcacao)
+    .map((item) => item === "Omissão de Posse Tradicional" ? "Exclusão indevida de área tradicional" : item)
+    .filter((item) => ["Vício Procedimental", "Erro Cartográfico/Técnico", "Exclusão indevida de área tradicional", "Existência de interferência indevida na definição dos limites", "Outros"].includes(item));
+  if (revisao.erroPrimeiraDemarcacao !== "Sim") revisao.tiposErroPrimeiraDemarcacao = [];
+  if (!revisao.tiposErroPrimeiraDemarcacao.includes("Outros")) revisao.outroErroPrimeiraDemarcacao = "";
+  if (reivindicacao.tipoDemanda !== "Revisão de limites") reivindicacao.revisaoLimites = {};
+  if (reserva.comunidadeIndicouArea !== "Sim") reserva.detalheAreaInteresse = "";
+  if (reserva.imovelDestinacaoComunidade !== "Sim") reserva.informacoesImovelDestinacao = "";
+  if (reivindicacao.tipoDemanda !== "Reserva Indígena") reivindicacao.reservaIndigena = {};
+  situacao.situacaoPosse = ({ Integral: "Integralmente", Parcial: "Parcialmente", Integralmente: "Integralmente", Parcialmente: "Parcialmente" })[situacao.situacaoPosse] || "";
+  if (situacao.indigenasArea !== "Sim") situacao.situacaoPosse = "";
+  delete situacao.vulnerabilidades;
+  delete situacao.outraVulnerabilidade;
+  delete situacao.outroCriterioVulnerabilidade;
+  delete situacao.detalhesVulnerabilidades;
+  situacao.tiposOcupantesNaoIndigenas = asList(situacao.tiposOcupantesNaoIndigenas).filter((item) => ["Posseiros", "Proprietários Titulados", "Grileiros/Invasores", "Outros"].includes(item));
+  if (situacao.ocupantesNaoIndigenas !== "Sim") situacao.tiposOcupantesNaoIndigenas = [];
+  if (!situacao.tiposOcupantesNaoIndigenas.includes("Outros")) situacao.outroOcupanteNaoIndigena = "";
+  if (situacao.temEmpreendimento !== "Sim") situacao.descricaoEmpreendimento = "";
+  if (situacao.povosIsolados !== "Sim") situacao.detalhesPovosIsolados = "";
+  if (situacao.comunidadesTradicionais !== "Sim") situacao.tiposComunidadeTradicional = [];
+  if (!asList(situacao.tiposComunidadeTradicional).includes("Outros")) situacao.descricaoComunidadeTradicional = "";
+  encaminhamentos.agrupamentos = encaminhamentos.relacaoOutrasReivindicacoes === "Sim" ? normalizarAgrupamentos(encaminhamentos) : [];
+  delete encaminhamentos.idsReivindicacoesRelacionadas;
+  delete encaminhamentos.descricaoRelacaoReivindicacoes;
+  if (encaminhamentos.reivindicacaoAtivaAtual !== "Não" || !["Abarcada por TI demarcada", "Abarcada por terra indígena com estudos em andamento", "Indígenas não têm mais interesse na reivindicação", "Outros"].includes(encaminhamentos.motivoInatividade)) encaminhamentos.motivoInatividade = "";
+  if (encaminhamentos.necessitaDesmembramento !== "Sim") {
+    encaminhamentos.justificativaDesmembramento = "";
+    encaminhamentos.novasReivindicacoes = "";
+  }
+  const area = dados.caracterizacaoArea ||= {};
+  if (area.sobreposicoes !== "Sim") area.tiposSobreposicao = [];
+  return dados;
+}
+
+function textoRelatorio(value) {
+  const labels = { "Vício Procedimental": "Vício procedimental", "Erro Cartográfico/Técnico": "Erro cartográfico/técnico", "Proprietários Titulados": "Proprietários titulados", "Grileiros/Invasores": "Grileiros/invasores", "Conflito Aberto": "Conflito aberto", "Reserva Indígena": "Reserva indígena" };
+  let text = asText(value).replace(/\*\*/g, "");
+  ["Unidade de Conservação Federal", "Unidade de Conservação Estadual", "Unidade de Conservação Municipal", "Gleba Pública Federal", "Gleba Pública Estadual", "Território Quilombola", "Projeto de Assentamento Agroextrativista", "Projeto de Desenvolvimento Sustentável", "Projeto de Assentamento Florestal", "Projeto de Assentamento"].forEach((label) => { labels[label] = label[0] + label.slice(1).toLowerCase(); });
+  Object.entries(labels).forEach(([oldLabel, label]) => { text = text.replaceAll(oldLabel, label); });
+  return text;
 }

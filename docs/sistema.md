@@ -16,8 +16,8 @@ O Formulario 2 implementa a parte `FORMULARIO PRODUTO 2` do roteiro de qualifica
 - `revisaoLimites.erroPrimeiraDemarcacao`
 - `revisaoLimites.tiposErroPrimeiraDemarcacao`
 - `revisaoLimites.outroErroPrimeiraDemarcacao`
-- `revisaoLimites.enquadraRequisitosStf`
 - `reservaIndigena.comunidadeIndicouArea`
+- `reservaIndigena.detalheAreaInteresse`
 - `reservaIndigena.imovelDestinacaoComunidade`
 - `reservaIndigena.informacoesImovelDestinacao`
 - `caracterizacaoArea.coordenadas`
@@ -27,17 +27,31 @@ O Formulario 2 implementa a parte `FORMULARIO PRODUTO 2` do roteiro de qualifica
 - `caracterizacaoArea.coordenadaSedeMunicipio`
 - `caracterizacaoArea.comentarioCoordenada`
 - `situacaoArea.situacaoPosse`
+- `situacaoArea.temEmpreendimento`
+- `situacaoArea.descricaoEmpreendimento`
 - `situacaoArea.ocupantesNaoIndigenas`
 - `situacaoArea.tiposOcupantesNaoIndigenas`
 - `situacaoArea.outroOcupanteNaoIndigena`
 - `situacaoArea.nivelTensaoLocal`
 - `encaminhamentos.reivindicacaoAtivaAtual`
 - `encaminhamentos.relacaoOutrasReivindicacoes`
-- `encaminhamentos.idsReivindicacoesRelacionadas`
-- `encaminhamentos.descricaoRelacaoReivindicacoes`
+- `encaminhamentos.agrupamentos`: lista de objetos `{ id, descricao }`.
+- `encaminhamentos.motivoInatividade`
+- `encaminhamentos.justificativaAtivaAtual`
+- `encaminhamentos.necessitaDesmembramento`
+- `encaminhamentos.justificativaDesmembramento`
+- `encaminhamentos.novasReivindicacoes`
+
+As chaves `nomeDocumentoRegularizacao`, `dataDocumentoRegularizacao` e `comentarioCoordenada` foram preservadas para compatibilidade; os rótulos são nome do ato, data do ato e descrição da coordenada.
+
+Na leitura, `Integral`/`Parcial` viram `Integralmente`/`Parcialmente`. `Omissão de Posse Tradicional` vira `Exclusão indevida de área tradicional`. IDs antigos são convertidos para itens de agrupamento, cada qual preservando a descrição compartilhada antiga. Valores removidos sem correspondência ficam sem seleção e não aparecem no relatório. Novas perguntas não recebem respostas presumidas para registros antigos.
+
+Todas as perguntas aplicáveis são obrigatórias para envio, inclusive cada coordenada e cada item de agrupamento. Rascunhos continuam permitindo preenchimento parcial. Condicionais ocultos não impedem o envio e não aparecem no relatório. Os novos dados seguem no `FormularioJson` existente.
 
 ## Campos removidos
 
+- `revisaoLimites.enquadraRequisitosStf`
+- `situacaoArea.vulnerabilidades` e campos associados
 - `outrosNomes`
 - `outrosNomesTexto`
 - `descricaoReivindicacao`
@@ -77,7 +91,6 @@ O Formulario 2 implementa a parte `FORMULARIO PRODUTO 2` do roteiro de qualifica
 - bioma;
 - faixa de fronteira;
 - sobreposicoes e detalhes por tipo;
-- criterios de vulnerabilidade;
 - comunidades tradicionais;
 - povos isolados.
 
@@ -100,3 +113,14 @@ Campos ja presentes no codigo legado:
 | FormularioJson | FormularioJson | Multiline text | Sim | Fonte completa do payload estruturado. |
 
 Acao manual necessaria no SharePoint: criar colunas dedicadas para os campos adicionados do Produto 2, caso o fluxo de Power Automate precise gravar cada campo fora do `FormularioJson`.
+
+## Validação local
+
+O teste `tests/formulario.test.cjs` usa jsdom 26.1.0 para verificar criação, edição, serialização/leitura, compatibilidade com registros antigos, condicionais, campos obrigatórios e conteúdo do relatório. Não acessa serviços externos. Para executá-lo em PowerShell, sem build ou dependência permanente na aplicação:
+
+```powershell
+npm.cmd install --no-save --package-lock=false --prefix .tmp-validation jsdom@26.1.0
+$env:NODE_PATH = Join-Path (Get-Location) '.tmp-validation/node_modules'
+node tests/formulario.test.cjs
+node --check js/script.js
+```

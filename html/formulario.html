@@ -10,7 +10,7 @@
 
         <div class="progress-wrap" aria-label="Progresso do formulário">
           <div class="progress-meta">
-            <strong id="progressTitle">1. DADOS DO(A) CONSULTOR(A)</strong>
+            <strong id="progressTitle">1. Dados do(a) consultor(a)</strong>
             <span id="stepCounter">Etapa 1 de 5</span>
           </div>
           <div class="progress-track">
@@ -19,11 +19,11 @@
         </div>
 
         <form id="funaiForm" novalidate>
-          <section class="step is-active" data-step="1" data-title="1. DADOS DO(A) CONSULTOR(A)">
+          <section class="step is-active" data-step="1" data-title="1. Dados do(a) consultor(a)">
             <div class="section-heading">
               <span>1</span>
               <div>
-                <h2>1. DADOS DO(A) CONSULTOR(A)</h2>
+                <h2>1. Dados do(a) consultor(a)</h2>
                 <p>Identifique quem está preenchendo o levantamento.</p>
               </div>
             </div>
@@ -64,11 +64,11 @@
             </div>
           </section>
 
-          <section class="step" data-step="2" data-title="2. REIVINDICAÇÃO">
+          <section class="step" data-step="2" data-title="2. Dados gerais da reivindicação">
             <div class="section-heading">
               <span>2</span>
               <div>
-                <h2>2. REIVINDICAÇÃO</h2>
+                <h2>2. Dados gerais da reivindicação</h2>
               </div>
             </div>
 
@@ -117,41 +117,41 @@
                   <fieldset class="wide">
                     <legend>Tipo da demanda *</legend>
                     <div class="check-grid demand-grid" data-required-group="tipoDemanda">
-                      <label><input type="radio" name="tipoDemanda" value="Reserva Indígena"> Reserva Indígena</label>
+                      <label><input type="radio" name="tipoDemanda" value="Reserva Indígena"> Reserva indígena</label>
                       <label><input type="radio" name="tipoDemanda" value="Identificação"> Identificação</label>
                       <label><input type="radio" name="tipoDemanda" value="Revisão de limites"> Revisão de limites</label>
                     </div>
                   </fieldset>
 
                   <section class="conditional wide modality-panel" id="revisaoLimitesWrap">
+                    <p class="revision-info">A instauração de procedimento de redimensionamento não é vedada quando houver descumprimento do art. 231 da Constituição, pedido de revisão até 5 anos da demarcação anterior e comprovação de grave e insanável erro no procedimento ou nos limites da TI.</p>
                     <div class="modality-panel__header">
                       <h3 class="modality-panel__title">Revisão de limites</h3>
                     </div>
                     <div class="modality-panel__grid">
                       <label>
-                        Qual o nome da TI Original?
-                        <input name="nomeTiOriginal" type="text" placeholder="Nome da Terra Indígena original">
+                        Qual é o nome da Terra Indígena já regularizada?
+                        <input name="nomeTiOriginal" type="text" placeholder="Nome da Terra Indígena já regularizada">
                       </label>
 
                       <label>
-                        Qual o último ato de regularização da Terra Indígena original?
+                        Qual é o último ato de regularização da Terra Indígena anteriormente demarcada?
                         <select name="ultimoAtoRegularizacao">
                           <option value="">Selecione</option>
                           <option>Delimitação</option>
                           <option>Declaração</option>
                           <option>Homologação</option>
                           <option>Registro</option>
-                          <option>Constituição de RI</option>
                         </select>
                       </label>
 
                       <label class="conditional" id="nomeDocumentoRegularizacaoWrap">
-                        Nome do documento
-                        <input name="nomeDocumentoRegularizacao" type="text" placeholder="Nome do documento">
+                        Nome do ato
+                        <input name="nomeDocumentoRegularizacao" type="text" placeholder="Nome do ato">
                       </label>
 
                       <label class="conditional" id="dataDocumentoRegularizacaoWrap">
-                        Data do documento
+                        Data do ato
                         <input name="dataDocumentoRegularizacao" type="text" inputmode="numeric" placeholder="dd/mm/aaaa">
                       </label>
 
@@ -161,7 +161,8 @@
                       </label>
 
                       <fieldset>
-                        Área reivindicada dentro do prazo decadencial de 5 anos?
+                        A área foi reivindicada dentro do prazo decadencial de 5 anos?
+                        <p class="field-help">Identificar a data da demarcação anterior e a data do pedido de revisão. O pedido deve ter sido formulado no prazo fixado pelo STF, que é de 5 anos</p>
                         <div class="check-grid">
                           <label><input type="radio" name="areaPrazoDecadencial" value="Sim"> Sim</label>
                           <label><input type="radio" name="areaPrazoDecadencial" value="Não"> Não</label>
@@ -169,7 +170,7 @@
                       </fieldset>
 
                       <fieldset class="modality-panel__full">
-                        Há documentação que revela grave e insanável erro na condução da primeira demarcação?
+                        Há documentação que revele grave e insanável erro na condução da primeira demarcação?
                         <div class="check-grid">
                           <label><input type="radio" name="erroPrimeiraDemarcacao" value="Sim"> Sim</label>
                           <label><input type="radio" name="erroPrimeiraDemarcacao" value="Não"> Não</label>
@@ -179,9 +180,10 @@
                       <fieldset class="conditional modality-panel__full" id="tiposErroPrimeiraDemarcacaoWrap">
                         <legend>Tipo de erro identificado</legend>
                         <div class="check-grid">
-                          <label><input type="checkbox" name="tiposErroPrimeiraDemarcacao" value="Vício Procedimental"> Vício Procedimental</label>
-                          <label><input type="checkbox" name="tiposErroPrimeiraDemarcacao" value="Erro Cartográfico/Técnico"> Erro Cartográfico/Técnico</label>
-                          <label><input type="checkbox" name="tiposErroPrimeiraDemarcacao" value="Omissão de Posse Tradicional"> Omissão de Posse Tradicional</label>
+                          <label><input type="checkbox" name="tiposErroPrimeiraDemarcacao" value="Vício Procedimental"> Vício procedimental</label>
+                          <label><input type="checkbox" name="tiposErroPrimeiraDemarcacao" value="Erro Cartográfico/Técnico"> Erro cartográfico/técnico</label>
+                          <label><input type="checkbox" name="tiposErroPrimeiraDemarcacao" value="Exclusão indevida de área tradicional"> Exclusão indevida de área tradicional</label>
+                          <label><input type="checkbox" name="tiposErroPrimeiraDemarcacao" value="Existência de interferência indevida na definição dos limites"> Existência de interferência indevida na definição dos limites</label>
                           <label><input type="checkbox" name="tiposErroPrimeiraDemarcacao" value="Outros"> Outros</label>
                         </div>
                       </fieldset>
@@ -190,30 +192,25 @@
                         Descrição de outros erros
                         <input name="outroErroPrimeiraDemarcacao" type="text" placeholder="Descreva">
                       </label>
-
-                      <fieldset class="modality-panel__full">
-                        A demanda se enquadra nos requisitos definidos pelo STF para a instauração de procedimento de revisão de limites?
-                        <div class="check-grid">
-                          <label><input type="radio" name="enquadraRequisitosStf" value="Sim"> Sim</label>
-                          <label><input type="radio" name="enquadraRequisitosStf" value="Não"> Não</label>
-                        </div>
-                      </fieldset>
                     </div>
                   </section>
 
                   <section class="conditional wide modality-panel" id="reservaIndigenaWrap">
                     <div class="modality-panel__header">
-                      <h3 class="modality-panel__title">Reserva Indígena</h3>
+                      <h3 class="modality-panel__title">Reserva indígena</h3>
                     </div>
                     <div class="modality-panel__grid">
                       <fieldset>
-                        A comunidade indicou uma área específica de interesse?
+                        A comunidade indicou uma área ou região de interesse?
                         <div class="check-grid">
                           <label><input type="radio" name="comunidadeIndicouArea" value="Sim"> Sim</label>
                           <label><input type="radio" name="comunidadeIndicouArea" value="Não"> Não</label>
                         </div>
                       </fieldset>
 
+                      <label class="conditional modality-panel__full" id="detalheAreaInteresseWrap">Detalhe brevemente a área ou região de interesse
+                        <textarea name="detalheAreaInteresse" rows="3"></textarea>
+                      </label>
                       <fieldset>
                         Existe imóvel passível de doação, cessão ou outra forma de destinação à comunidade?
                         <div class="check-grid">
@@ -233,11 +230,11 @@
             </div>
           </section>
 
-          <section class="step" data-step="3" data-title="3. CARACTERIZAÇÃO DA ÁREA REIVINDICADA">
+          <section class="step" data-step="3" data-title="3. Caracterização da área reivindicada">
             <div class="section-heading">
               <span>3</span>
               <div>
-                <h2>3. CARACTERIZAÇÃO DA ÁREA REIVINDICADA</h2>
+                <h2>3. Caracterização da área reivindicada</h2>
                 <p>Localização, coordenadas/aldeias principais, bioma e sobreposições.</p>
               </div>
             </div>
@@ -264,8 +261,8 @@
               </div>
 
               <label class="wide">
-                Localização da demanda*
-                <textarea name="localizacaoDemanda" rows="4" placeholder="Descreva onde se localiza a demanda e as localidades relevantes para os indígenas"></textarea>
+                Localização da demanda conforme relatório*
+                <textarea name="localizacaoDemanda" rows="4" placeholder="Breve descrição de onde está localizada a demanda e as áreas de relevante interesse para os indígenas"></textarea>
               </label>
 
               <section class="wide coordinate-table-section" id="coordenadasWrap" aria-labelledby="coordenadasTitle">
@@ -298,7 +295,7 @@
                         <th>Latitude</th>
                         <th>Longitude</th>
                         <th>Localizada na sede do município?</th>
-                        <th>Comentário da coordenada</th>
+                        <th>Descrição da coordenada</th>
                         <th>Ações</th>
                       </tr>
                     </thead>
@@ -313,7 +310,7 @@
                             <option>Não</option>
                           </select>
                         </td>
-                        <td><input name="comentarioCoordenada" type="text" placeholder="Comentário da coordenada" aria-label="Comentário da coordenada"></td>
+                        <td><input name="comentarioCoordenada" type="text" placeholder="Descrição da coordenada" aria-label="Descrição da coordenada"></td>
                         <td class="coordinate-actions">
                           <button type="button" class="icon-button remove-coordenada-btn" aria-label="Remover coordenada">×</button>
                           <button type="button" class="icon-button add-coordenada-row-btn" aria-label="Adicionar coordenada">+</button>
@@ -337,7 +334,7 @@
               </fieldset>
 
               <fieldset>
-                Faixa de Fronteira*
+                Faixa de fronteira*
                 <div class="check-grid">
                   <label><input type="radio" name="faixaFronteira" value="Sim"> Sim</label>
                   <label><input type="radio" name="faixaFronteira" value="Não"> Não</label>
@@ -357,22 +354,22 @@
                   <div class="overlap-column">
                     <label class="overlap-item has-detail">
                       <input type="checkbox" name="tiposSobreposicao" value="Unidade de Conservação Federal">
-                      <span>Unidade de Conservação Federal</span>
+                      <span>Unidade de conservação federal</span>
                       <input class="overlap-detail" name="detalheUcFederal" type="text" placeholder="Digite aqui">
                     </label>
                     <label class="overlap-item has-detail">
                       <input type="checkbox" name="tiposSobreposicao" value="Unidade de Conservação Estadual">
-                      <span>Unidade de Conservação Estadual</span>
+                      <span>Unidade de conservação estadual</span>
                       <input class="overlap-detail" name="detalheUcEstadual" type="text" placeholder="Digite aqui">
                     </label>
                     <label class="overlap-item has-detail">
                       <input type="checkbox" name="tiposSobreposicao" value="Unidade de Conservação Municipal">
-                      <span>Unidade de Conservação Municipal</span>
+                      <span>Unidade de conservação municipal</span>
                       <input class="overlap-detail" name="detalheUcMunicipal" type="text" placeholder="Digite aqui">
                     </label>
                     <label class="overlap-item has-detail">
                       <input type="checkbox" name="tiposSobreposicao" value="Projeto de Assentamento (PA)">
-                      <span>Projeto de Assentamento (PA)</span>
+                      <span>Projeto de assentamento (PA)</span>
                       <input class="overlap-detail" name="detalheProjetoAssentamento" type="text" placeholder="Digite aqui">
                     </label>
                   </div>
@@ -380,22 +377,22 @@
                   <div class="overlap-column">
                     <label class="overlap-item has-detail">
                       <input type="checkbox" name="tiposSobreposicao" value="Gleba Pública Federal">
-                      <span>Gleba Pública Federal</span>
+                      <span>Gleba pública federal</span>
                       <input class="overlap-detail" name="detalheGlebaFederal" type="text" placeholder="Digite aqui">
                     </label>
                     <label class="overlap-item has-detail">
                       <input type="checkbox" name="tiposSobreposicao" value="Gleba Pública Estadual">
-                      <span>Gleba Pública Estadual</span>
+                      <span>Gleba pública estadual</span>
                       <input class="overlap-detail" name="detalheGlebaEstadual" type="text" placeholder="Digite aqui">
                     </label>
                     <label class="overlap-item has-detail">
                       <input type="checkbox" name="tiposSobreposicao" value="Território Quilombola">
-                      <span>Território Quilombola</span>
+                      <span>Território quilombola</span>
                       <input class="overlap-detail" name="detalheTerritorioQuilombola" type="text" placeholder="Digite aqui">
                     </label>
                     <label class="overlap-item has-detail">
                       <input type="checkbox" name="tiposSobreposicao" value="Projeto de Assentamento Agroextrativista (PAE)">
-                      <span>Projeto de Assentamento Agroextrativista (PAE)</span>
+                      <span>Projeto de assentamento agroextrativista (PAE)</span>
                       <input class="overlap-detail" name="detalheProjetoAssentamentoAgroextrativista" type="text" placeholder="Digite aqui">
                     </label>
                   </div>
@@ -403,12 +400,12 @@
                   <div class="overlap-column">
                     <label class="overlap-item has-detail">
                       <input type="checkbox" name="tiposSobreposicao" value="Projeto de Desenvolvimento Sustentável (PDS)">
-                      <span>Projeto de Desenvolvimento Sustentável (PDS)</span>
+                      <span>Projeto de desenvolvimento sustentável (PDS)</span>
                       <input class="overlap-detail" name="detalheProjetoDesenvolvimentoSustentavel" type="text" placeholder="Digite aqui">
                     </label>
                     <label class="overlap-item has-detail">
                       <input type="checkbox" name="tiposSobreposicao" value="Projeto de Assentamento Florestal (PAF)">
-                      <span>Projeto de Assentamento Florestal (PAF)</span>
+                      <span>Projeto de assentamento florestal (PAF)</span>
                       <input class="overlap-detail" name="detalheProjetoAssentamentoFlorestal" type="text" placeholder="Digite aqui">
                     </label>
                     <label class="overlap-item has-detail">
@@ -422,12 +419,12 @@
             </div>
           </section>
 
-          <section class="step" data-step="4" data-title="4. SITUAÇÃO DA ÁREA REIVINDICADA">
+          <section class="step" data-step="4" data-title="4. Situação da área reivindicada">
             <div class="section-heading">
               <span>4</span>
               <div>
-                <h2>4. SITUAÇÃO DA ÁREA REIVINDICADA</h2>
-                <p>Posse, vulnerabilidades, comunidades tradicionais, ocupantes e tensão local.</p>
+                <h2>4. Situação da área reivindicada</h2>
+                <p>Posse, empreendimentos, comunidades tradicionais, ocupantes e tensão local.</p>
               </div>
             </div>
 
@@ -445,9 +442,8 @@
                   <fieldset class="conditional" id="indigenasAreaWrap">
                     <legend>Situação de posse</legend>
                     <div class="check-grid">
-                      <label><input type="radio" name="situacaoPosse" value="Integral"> Integral</label>
-                      <label><input type="radio" name="situacaoPosse" value="Parcial"> Parcial</label>
-                      <label><input type="radio" name="situacaoPosse" value="Retomada"> Retomada</label>
+                      <label><input type="radio" name="situacaoPosse" value="Integralmente"> Integralmente</label>
+                      <label><input type="radio" name="situacaoPosse" value="Parcialmente"> Parcialmente</label>
                     </div>
                   </fieldset>
                 </div>
@@ -456,22 +452,16 @@
               <section class="occupation-item">
                 <div class="occupation-content">
                   <fieldset>
-                    <legend>Critério de vulnerabilidade*</legend>
-                    <div class="check-grid vulnerability-grid">
-                      <label><input type="checkbox" name="vulnerabilidades" value="Garimpo"> Garimpo</label>
-                      <label><input type="checkbox" name="vulnerabilidades" value="Empreendimento de grande porte"> Empreendimento de grande porte</label>
-                      <label><input type="checkbox" name="vulnerabilidades" value="Conflito deflagrado"> Conflito deflagrado</label>
-                      <label><input type="checkbox" name="vulnerabilidades" value="Conflito latente"> Conflito latente</label>
-                      <label><input type="checkbox" name="vulnerabilidades" value="Danos ambientais"> Danos ambientais</label>
-                      <label><input type="checkbox" name="vulnerabilidades" value="Inacessibilidade a políticas públicas"> Inacessibilidade a políticas públicas</label>
-                      <label><input type="checkbox" name="vulnerabilidades" value="Risco habitacional"> Risco habitacional</label>
-                      <label><input type="checkbox" name="vulnerabilidades" value="Outros"> Outros</label>
+                    <legend>Há algum empreendimento na área?</legend>
+                    <div class="check-grid">
+                      <label><input type="radio" name="temEmpreendimento" value="Sim"> Sim</label>
+                      <label><input type="radio" name="temEmpreendimento" value="Não"> Não</label>
                     </div>
-                    <label class="conditional" id="outraVulnerabilidadeWrap">
-                      Informe outro crit&eacute;rio de vulnerabilidade*
-                      <input name="outraVulnerabilidade" type="text" placeholder="Descreva o outro crit&eacute;rio de vulnerabilidade">
-                    </label>
                   </fieldset>
+                  <label class="conditional" id="descricaoEmpreendimentoWrap">
+                    Descrição do empreendimento
+                    <textarea name="descricaoEmpreendimento" rows="3"></textarea>
+                  </label>
                 </div>
               </section>
 
@@ -525,7 +515,7 @@
               <section class="occupation-item">
                 <div class="occupation-content">
                   <fieldset>
-                    Presença de Ocupantes Não Indígenas
+                    Presença de ocupantes não indígenas
                     <div class="check-grid">
                       <label><input type="radio" name="ocupantesNaoIndigenas" value="Sim"> Sim</label>
                       <label><input type="radio" name="ocupantesNaoIndigenas" value="Não"> Não</label>
@@ -536,9 +526,8 @@
                     <legend>Tipos de ocupantes</legend>
                     <div class="check-grid">
                       <label><input type="checkbox" name="tiposOcupantesNaoIndigenas" value="Posseiros"> Posseiros</label>
-                      <label><input type="checkbox" name="tiposOcupantesNaoIndigenas" value="Proprietários Titulados"> Proprietários Titulados</label>
-                      <label><input type="checkbox" name="tiposOcupantesNaoIndigenas" value="Grileiros/Invasores"> Grileiros/Invasores</label>
-                      <label><input type="checkbox" name="tiposOcupantesNaoIndigenas" value="Empreendimentos"> Empreendimentos</label>
+                      <label><input type="checkbox" name="tiposOcupantesNaoIndigenas" value="Proprietários Titulados"> Proprietários titulados</label>
+                      <label><input type="checkbox" name="tiposOcupantesNaoIndigenas" value="Grileiros/Invasores"> Grileiros/invasores</label>
                       <label><input type="checkbox" name="tiposOcupantesNaoIndigenas" value="Outros"> Outros</label>
                     </div>
                   </fieldset>
@@ -553,11 +542,11 @@
               <section class="occupation-item">
                 <div class="occupation-content">
                   <fieldset>
-                    Nível de Tensão Local
+                    Nível de tensão local
                     <div class="check-grid">
                       <label><input type="radio" name="nivelTensaoLocal" value="Pacífica"> Pacífica</label>
                       <label><input type="radio" name="nivelTensaoLocal" value="Tensa"> Tensa</label>
-                      <label><input type="radio" name="nivelTensaoLocal" value="Conflito Aberto"> Conflito Aberto</label>
+                      <label><input type="radio" name="nivelTensaoLocal" value="Conflito Aberto"> Conflito aberto</label>
                     </div>
                   </fieldset>
                 </div>
@@ -566,40 +555,67 @@
             </div>
           </section>
 
-          <section class="step" data-step="5" data-title="5. ENCAMINHAMENTOS E RECOMENDAÇÕES">
+          <section class="step" data-step="5" data-title="5. Encaminhamentos e recomendações">
             <div class="section-heading">
               <span>5</span>
               <div>
-                <h2>5. ENCAMINHAMENTOS E RECOMENDAÇÕES</h2>
+                <h2>5. Encaminhamentos e recomendações</h2>
               </div>
             </div>
 
             <div class="field-grid">
               <fieldset>
-                A Reivindicação Permanece Ativa e Atual?
+                A reivindicação permanece ativa e atual?
                 <div class="check-grid">
                   <label><input type="radio" name="reivindicacaoAtivaAtual" value="Sim"> Sim</label>
                   <label><input type="radio" name="reivindicacaoAtivaAtual" value="Não"> Não</label>
                 </div>
               </fieldset>
 
+              <label class="conditional wide" id="motivoInatividadeWrap">
+                Motivo da inatividade
+                <select name="motivoInatividade">
+                  <option value="">Selecione</option>
+                  <option>Abarcada por TI demarcada</option>
+                  <option>Abarcada por terra indígena com estudos em andamento</option>
+                  <option>Indígenas não têm mais interesse na reivindicação</option>
+                  <option>Outros</option>
+                </select>
+              </label>
+              <label class="wide">
+                Justificativa da situação atual
+                <input name="justificativaAtivaAtual" type="text">
+              </label>
               <fieldset>
-                Há Relação com Outras Reivindicações na Região?
+                Há indícios de que essa reivindicação poderá ser agrupada com outras da região em caso de compor um Grupo Técnico (GT) para realização dos estudos?
                 <div class="check-grid">
                   <label><input type="radio" name="relacaoOutrasReivindicacoes" value="Sim"> Sim</label>
                   <label><input type="radio" name="relacaoOutrasReivindicacoes" value="Não"> Não</label>
                 </div>
               </fieldset>
 
-              <label class="conditional wide" id="idsReivindicacoesRelacionadasWrap">
-                IDs das reivindicações relacionadas
-                <input name="idsReivindicacoesRelacionadas" type="text" placeholder="Informe um ou vários IDs, separados por vírgula">
-              </label>
-
-              <label class="conditional wide" id="descricaoRelacaoReivindicacoesWrap">
-                Descrição da relação
-                <textarea name="descricaoRelacaoReivindicacoes" rows="3" placeholder="Ex.: agrupamento, desmembramento ou outro tipo de relação"></textarea>
-              </label>
+              <div class="conditional wide" id="idsReivindicacoesRelacionadasWrap">
+                <p>Reivindicações para agrupamento</p>
+                <div id="agrupamentosList"></div>
+                <button type="button" class="icon-button" id="addAgrupamentoBtn" aria-label="Adicionar reivindicação para agrupamento">+</button>
+              </div>
+              <fieldset class="wide">
+                <legend>Entende-se que esta reivindicação necessita ser desmembrada em duas ou mais novas reivindicações independentes?</legend>
+                <div class="check-grid">
+                  <label><input type="radio" name="necessitaDesmembramento" value="Sim"> Sim</label>
+                  <label><input type="radio" name="necessitaDesmembramento" value="Não"> Não</label>
+                </div>
+              </fieldset>
+              <div class="conditional wide" id="desmembramentoWrap">
+                <label>
+                  Justificativa do desmembramento
+                  <textarea name="justificativaDesmembramento" rows="4"></textarea>
+                </label>
+                <label>
+                  Quais deverão ser as novas reivindicações?
+                  <textarea name="novasReivindicacoes" rows="4"></textarea>
+                </label>
+              </div>
             </div>
           </section>
 
@@ -608,7 +624,7 @@
           <footer class="form-actions">
             <div class="nav-actions">
               <button type="button" class="secondary" id="homeBtn">Início</button>
-              <button type="button" class="secondary" id="saveDraftBtn">Salvar Rascunho</button>
+              <button type="button" class="secondary" id="saveDraftBtn">Salvar rascunho</button>
               <button type="button" class="secondary" id="savePdfBtn" hidden>Salvar em PDF</button>
             </div>
             <div class="nav-actions">
