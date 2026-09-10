@@ -35,12 +35,12 @@
               </label>
 
               <label>
-                Nome completo do(a) consultor(a)*
+                Nome completo do(a) consultor(a)
                 <input name="consultorNome" type="text" placeholder="Digite seu nome completo" required>
               </label>
 
               <label>
-                Área de estudo*
+                Área de estudo
                 <select name="areaEstudo" required>
                   <option value="" selected>Escolha</option>
                   <option value="Acre | Envira | Alto Purus">Acre | envira | alto purus</option>
@@ -77,12 +77,12 @@
                 <h3>Identificação</h3>
                 <div class="field-grid compact">
                   <label>
-                    ID*
+                    ID
                     <input name="reivindicacaoId" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="Digite o ID" required>
                   </label>
 
                   <label>
-                    Nome da reivindicação*
+                    Nome da reivindicação
                     <input name="nomeReivindicacao" type="text" placeholder="Digite o nome da reivindicação" required>
                   </label>
                 </div>
@@ -92,7 +92,7 @@
                 <h3>Etnias</h3>
                 <div class="field-grid compact">
                   <div class="multi-autocomplete wide">
-                    <label for="etniaInput">Etnias*</label>
+                    <label for="etniaInput">Etnias</label>
                     <div class="autocomplete-row">
                       <input id="etniaInput" type="text" list="etniaOptions" placeholder="Localizar etnias">
                       <button type="button" class="icon-button" id="addEtniaBtn" aria-label="Adicionar etnia">+</button>
@@ -115,7 +115,7 @@
                 <h3>Tipo de demanda</h3>
                 <div class="field-grid compact">
                   <fieldset class="wide">
-                    <legend>Tipo da demanda *</legend>
+                    <legend>Tipo da demanda</legend>
                     <div class="check-grid demand-grid" data-required-group="tipoDemanda">
                       <label><input type="radio" name="tipoDemanda" value="Reserva Indígena"> Reserva indígena</label>
                       <label><input type="radio" name="tipoDemanda" value="Identificação"> Identificação</label>
@@ -170,10 +170,18 @@
                       </fieldset>
 
                       <fieldset class="modality-panel__full">
-                        A demanda se enquadra nos requisitos definidos pelo STF para instauração de procedimento de revisão de limites?
+                        Há documentação que revele grave e insanável erro na condução da primeira demarcação?
                         <div class="check-grid">
                           <label><input type="radio" name="erroPrimeiraDemarcacao" value="Sim"> Sim</label>
                           <label><input type="radio" name="erroPrimeiraDemarcacao" value="Não"> Não</label>
+                        </div>
+                      </fieldset>
+
+                      <fieldset class="modality-panel__full">
+                        A demanda se enquadra nos requisitos definidos pelo STF para instauração de procedimento de revisão de limites?
+                        <div class="check-grid">
+                          <label><input type="radio" name="enquadraRequisitosStf" value="Sim"> Sim</label>
+                          <label><input type="radio" name="enquadraRequisitosStf" value="Não"> Não</label>
                         </div>
                       </fieldset>
 
@@ -241,7 +249,7 @@
 
             <div class="field-grid">
               <div class="multi-autocomplete">
-                <label for="estadoInput">Estado*</label>
+                <label for="estadoInput">Estado</label>
                 <div class="autocomplete-row">
                   <input id="estadoInput" type="text" list="estadoOptions" placeholder="Localizar estados">
                   <button type="button" class="icon-button" id="addEstadoBtn" aria-label="Adicionar estado">+</button>
@@ -251,7 +259,7 @@
               </div>
 
               <div class="multi-autocomplete">
-                <label for="municipioInput">Município*</label>
+                <label for="municipioInput">Município</label>
                 <div class="autocomplete-row">
                   <input id="municipioInput" type="text" list="municipioOptions" placeholder="Selecione um estado primeiro">
                   <button type="button" class="icon-button" id="addMunicipioBtn" aria-label="Adicionar município">+</button>
@@ -261,7 +269,7 @@
               </div>
 
               <label class="wide">
-                Localização da demanda conforme relatório*
+                Localização da demanda conforme relatório
                 <textarea name="localizacaoDemanda" rows="4" placeholder="Breve descrição de onde está localizada a demanda e as áreas de relevante interesse para os indígenas"></textarea>
               </label>
 
@@ -322,7 +330,7 @@
               </section>
 
               <fieldset class="wide area-block bioma-block">
-                <legend>Bioma*</legend>
+                <legend>Bioma</legend>
                 <div class="check-grid">
                   <label><input type="checkbox" name="bioma" value="Cerrado"> Cerrado</label>
                   <label><input type="checkbox" name="bioma" value="Amazônia"> Amazônia</label>
@@ -334,7 +342,7 @@
               </fieldset>
 
               <fieldset>
-                Faixa de fronteira*
+                Faixa de fronteira
                 <div class="check-grid">
                   <label><input type="radio" name="faixaFronteira" value="Sim"> Sim</label>
                   <label><input type="radio" name="faixaFronteira" value="Não"> Não</label>
@@ -342,7 +350,7 @@
               </fieldset>
 
               <fieldset class="wide overlap-question">
-                <legend>Sobreposições*</legend>
+                <legend>Sobreposições</legend>
                 <div class="check-grid">
                   <label><input type="radio" name="sobreposicoes" value="Sim"> Sim</label>
                   <label><input type="radio" name="sobreposicoes" value="Não"> Não</label>
@@ -432,7 +440,7 @@
               <section class="occupation-item">
                 <div class="occupation-content">
                   <fieldset>
-                    Indígenas estão na área reivindicada?*
+                    Indígenas estão na área reivindicada?
                     <div class="check-grid">
                       <label><input type="radio" name="indigenasArea" value="Sim"> Sim</label>
                       <label><input type="radio" name="indigenasArea" value="Não"> Não</label>
@@ -468,7 +476,7 @@
               <section class="occupation-item">
                 <div class="occupation-content">
                   <fieldset>
-                    Há presença de outras comunidades tradicionais na área reivindicada?*
+                    Há presença de outras comunidades tradicionais na área reivindicada?
                     <div class="check-grid">
                       <label><input type="radio" name="comunidadesTradicionais" value="Sim"> Sim</label>
                       <label><input type="radio" name="comunidadesTradicionais" value="Não"> Não</label>
@@ -496,7 +504,7 @@
 
               <section class="occupation-item">
                 <div class="occupation-content">
-                  <h3>Povos isolados?*</h3>
+                  <h3>Povos isolados?</h3>
                   <fieldset>
                     Há indício de povos isolados?
                     <div class="check-grid">

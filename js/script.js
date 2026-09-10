@@ -4753,6 +4753,8 @@ function validateRequiredFields(isDraftSave = false) {
     { fieldId: "etnias", label: "Etnias", isValid: () => selectedEtnias.length > 0 },
     { fieldId: "outraEtnia", label: "Outra etnia", isValid: () => !selectedEtnias.includes("Outros") || selectedOutrasEtnias.length > 0 },
     { fieldId: "tipoDemanda", label: "Tipo da demanda", isValid: () => demandas.length === 1 },
+    { fieldId: "erroPrimeiraDemarcacao", label: "Há documentação que revele grave e insanável erro na condução da primeira demarcação", isValid: () => !isRevisao || hasChecked("erroPrimeiraDemarcacao") },
+    { fieldId: "enquadraRequisitosStf", label: "A demanda se enquadra nos requisitos definidos pelo STF para instauração de procedimento de revisão de limites", isValid: () => !isRevisao || hasChecked("enquadraRequisitosStf") },
     { fieldId: "tiposErroPrimeiraDemarcacao", label: "Tipo de erro identificado", isValid: () => !isRevisao || getValue("erroPrimeiraDemarcacao") !== "Sim" || getCheckedValues("tiposErroPrimeiraDemarcacao").length > 0 },
     { fieldId: "outroErroPrimeiraDemarcacao", label: "Descrição de outros erros", isValid: () => !isRevisao || !getCheckedValues("tiposErroPrimeiraDemarcacao").includes("Outros") || hasValue("outroErroPrimeiraDemarcacao") },
     { fieldId: "estados", label: "Estado", isValid: () => selectedEstados.length > 0 },
@@ -4863,6 +4865,7 @@ function montarFormularioJson(statusFormulario = "Rascunho", now = new Date().to
         dataPrimeiraMencaoReivindicacao: prepararDataParaPayload(getValue("dataPrimeiraMencaoReivindicacao")),
         areaPrazoDecadencial: asText(getValue("areaPrazoDecadencial")),
         erroPrimeiraDemarcacao: asText(getValue("erroPrimeiraDemarcacao")),
+        enquadraRequisitosStf: asText(getValue("enquadraRequisitosStf")),
         tiposErroPrimeiraDemarcacao: tiposErro,
         outroErroPrimeiraDemarcacao: tiposErro.includes("Outros") ? asText(getValue("outroErroPrimeiraDemarcacao")) : "",
 
@@ -5016,6 +5019,7 @@ function flattenDraft(draft) {
     dataPrimeiraMencaoReivindicacao: revisao.dataPrimeiraMencaoReivindicacao,
     areaPrazoDecadencial: revisao.areaPrazoDecadencial,
     erroPrimeiraDemarcacao: revisao.erroPrimeiraDemarcacao,
+    enquadraRequisitosStf: revisao.enquadraRequisitosStf,
     tiposErroPrimeiraDemarcacao: revisao.tiposErroPrimeiraDemarcacao,
     outroErroPrimeiraDemarcacao: revisao.outroErroPrimeiraDemarcacao,
 
@@ -5108,7 +5112,8 @@ function prepararImpressaoPdf(dadosOrigem = null) {
       dados.reivindicacao?.tipoDemanda === "Revisão de limites" ? pdfField("Prazo do pedido de revisão", "Identificar a data da demarcação anterior e a data do pedido de revisão. O pedido deve ter sido formulado no prazo fixado pelo STF, que é de 5 anos") : null,
       pdfField("Data da primeira menção", formatarDataPdf(dados.reivindicacao?.revisaoLimites?.dataPrimeiraMencaoReivindicacao)),
       pdfRadio("A área foi reivindicada dentro do prazo decadencial de 5 anos?", dados.reivindicacao?.revisaoLimites?.areaPrazoDecadencial, ["Sim", "Não"]),
-      pdfRadio("A demanda se enquadra nos requisitos definidos pelo STF para instauração de procedimento de revisão de limites?", dados.reivindicacao?.revisaoLimites?.erroPrimeiraDemarcacao, ["Sim", "Não"]),
+      pdfRadio("Há documentação que revele grave e insanável erro na condução da primeira demarcação?", dados.reivindicacao?.revisaoLimites?.erroPrimeiraDemarcacao, ["Sim", "Não"]),
+      pdfRadio("A demanda se enquadra nos requisitos definidos pelo STF para instauração de procedimento de revisão de limites?", dados.reivindicacao?.revisaoLimites?.enquadraRequisitosStf, ["Sim", "Não"]),
       pdfField("Tipos de erro", asList(dados.reivindicacao?.revisaoLimites?.tiposErroPrimeiraDemarcacao).join(", ")),
       pdfField("Outro erro", dados.reivindicacao?.revisaoLimites?.outroErroPrimeiraDemarcacao),
     ]),
@@ -5378,7 +5383,6 @@ function normalizarRegistroAtual(original) {
   const reserva = reivindicacao.reservaIndigena ||= {};
   const situacao = dados.situacaoArea ||= dados.ocupacaoIndigena || {};
   const encaminhamentos = dados.encaminhamentos ||= {};
-  delete revisao.enquadraRequisitosStf;
   if (!["Delimitação", "Declaração", "Homologação", "Registro"].includes(revisao.ultimoAtoRegularizacao)) {
     revisao.ultimoAtoRegularizacao = "";
     revisao.nomeDocumentoRegularizacao = "";

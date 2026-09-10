@@ -105,7 +105,8 @@ for(const status of ['Rascunho','Enviado']){
 assert(!w.document.getElementById('idsReivindicacoesRelacionadasWrap').classList.contains('is-visible'));
 assert.equal(w.document.querySelector('option[value="Alto Solimões 1"]').textContent,'Alto solimões 1');
 assert.equal(w.document.querySelector('[name="tipoDemanda"]').value,'Reserva Indígena');
-assert(w.document.querySelector('[name="erroPrimeiraDemarcacao"]').closest('fieldset').textContent.includes('A demanda se enquadra nos requisitos definidos pelo STF para instauração de procedimento de revisão de limites?'));
+assert(w.document.querySelector('[name="erroPrimeiraDemarcacao"]').closest('fieldset').textContent.includes('Há documentação que revele grave e insanável erro na condução da primeira demarcação?'));
+assert(w.document.querySelector('[name="enquadraRequisitosStf"]').closest('fieldset').textContent.includes('A demanda se enquadra nos requisitos definidos pelo STF para instauração de procedimento de revisão de limites?'));
 console.log('PASS: criação, edição, persistência JSON, registros antigos, validação obrigatória/condicional, IDs independentes, datas e relatório com texto longo.');
 dom.window.close();
 
