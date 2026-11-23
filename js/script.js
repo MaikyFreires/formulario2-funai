@@ -5288,6 +5288,10 @@ function parseIdsRelacionados(value) {
 // Conditional applicability must not depend on the currently displayed step.
 function isApplicableControl(field) {
   if (field.disabled || field.type === "hidden") return false;
+  if (field.classList.contains("overlap-detail")) {
+    const checkbox = field.closest(".overlap-item")?.querySelector('input[type="checkbox"]');
+    if (!checkbox?.checked) return false;
+  }
   let parent = field.parentElement;
   while (parent && parent !== form) {
     if (parent.classList.contains("conditional") && !parent.classList.contains("is-visible")) return false;
